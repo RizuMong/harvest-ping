@@ -71,6 +71,12 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="scheduler"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

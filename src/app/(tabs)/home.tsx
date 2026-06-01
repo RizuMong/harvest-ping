@@ -68,7 +68,7 @@ function HomeScreen() {
         : item.id === "approval"
         ? pendingApprovals.length || undefined
         : undefined,
-    onPress: () => router.push(item.route as any),
+    onPress: () => router.push(item.route),
   }));
 
   // Show top 3 notifications in the home page
@@ -133,7 +133,7 @@ function HomeScreen() {
         {/* Announcements/Notifications Card */}
         <View style={styles.announcementsCard}>
           <View style={styles.announcementsHeader}>
-            <Text style={styles.announcementsTitle}>Pengumuman & Pengingat</Text>
+            <Text style={styles.announcementsTitle}>Pengumuman</Text>
             <Pressable onPress={() => router.push("/(tabs)/inbox")}>
               <Text style={styles.viewAllText}>View all</Text>
             </Pressable>

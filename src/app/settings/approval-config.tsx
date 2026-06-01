@@ -10,9 +10,10 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useHarvestStore, ApproverConfig } from "@/store/harvest.store";
+import { useHarvestStore } from "@/store/harvest.store";
 import { supabase } from "@/services/supabase";
 
 interface DBUser {
@@ -119,6 +120,7 @@ export default function ApprovalConfigScreen() {
   };
 
   return (
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
     <View style={styles.container}>
       {/* Header Bar */}
       <View style={styles.header}>
@@ -260,10 +262,15 @@ export default function ApprovalConfigScreen() {
         </View>
       </Modal>
     </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+    flex: 1,
+    backgroundColor: "#F3F4F6",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F3F4F6",
