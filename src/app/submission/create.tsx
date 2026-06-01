@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-  TextInput,
-  Modal,
-  Alert,
-  ActivityIndicator,
-  Platform,
-  SafeAreaView,
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
+import { REQUEST_STATUS_BADGES } from "@/config/app.config";
 import { useAuthStore } from "@/store/auth.store";
-import { useHarvestStore, FinishHarvestRequest } from "@/store/harvest.store";
+import { FinishHarvestRequest, useHarvestStore } from "@/store/harvest.store";
 
 export default function CreateSubmissionScreen() {
   const user = useAuthStore((state) => state.user);
@@ -90,17 +90,17 @@ export default function CreateSubmissionScreen() {
     try {
       const uId = user?.id || "1";
       const uName = user?.name || "Mandor Panen";
-      
+
       await createRequest(selectedSchedulerId, harvestDate, note.trim(), uId, uName);
-      
+
       Alert.alert("Sukses", "Pengajuan selesai panen berhasil dikirim!");
-      
+
       // Reset form
       setSelectedSchedulerId("");
       setSelectedSchedulerTitle("");
       setHarvestDate("");
       setNote("");
-      
+
       // Redirect to history tab
       setActiveSegment("history");
     } catch (err: any) {
@@ -111,18 +111,9 @@ export default function CreateSubmissionScreen() {
     }
   };
 
-  // Get status color coding
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "approved":
-        return { bg: "#E6F4EA", text: "#137333", label: "Approved" };
-      case "rejected":
-        return { bg: "#FCE8E6", text: "#C5221F", label: "Rejected" };
-      case "submitted":
-      default:
-        return { bg: "#E8F0FE", text: "#1A73E8", label: "Submitted" };
-    }
-  };
+  const getStatusBadge = (status: string) =>
+    REQUEST_STATUS_BADGES[status as keyof typeof REQUEST_STATUS_BADGES] ||
+    REQUEST_STATUS_BADGES.submitted;
 
   // Get approval sequence progress text
   const getApprovalProgress = (req: FinishHarvestRequest) => {
@@ -132,304 +123,310 @@ export default function CreateSubmissionScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Segmented Top Header */}
-      <View style={styles.segmentContainer}>
-        <Pressable
-          style={[styles.segmentButton, activeSegment === "create" && styles.activeSegmentButton]}
-          onPress={() => setActiveSegment("create")}
-        >
-          <Ionicons
-            name="add-circle-outline"
-            size={18}
-            color={activeSegment === "create" ? "#2E7D32" : "#5F6368"}
-            style={{ marginRight: 6 }}
-          />
-          <Text style={[styles.segmentText, activeSegment === "create" && styles.activeSegmentText]}>
-            Buat Pengajuan
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.segmentButton, activeSegment === "history" && styles.activeSegmentButton]}
-          onPress={() => setActiveSegment("history")}
-        >
-          <Ionicons
-            name="time-outline"
-            size={18}
-            color={activeSegment === "history" ? "#2E7D32" : "#5F6368"}
-            style={{ marginRight: 6 }}
-          />
-          <Text style={[styles.segmentText, activeSegment === "history" && styles.activeSegmentText]}>
-            Riwayat
-          </Text>
-        </Pressable>
-      </View>
-
-      {activeSegment === "create" ? (
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.screenSubtitle}>
-            Lengkapi detail panen di bawah ini untuk mengajukan selesai panen ke sistem persetujuan.
-          </Text>
-
-          {/* Schedulers Searchable Dropdown */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Jadwal Panen (Scheduler) <Text style={{ color: "#D93025" }}>*</Text></Text>
-            <Pressable
-              style={styles.dropdownTrigger}
-              onPress={() => setDropdownVisible(true)}
-            >
-              <Text
-                style={[
-                  styles.dropdownTriggerText,
-                  !selectedSchedulerTitle && { color: "#9CA3AF" },
-                ]}
-                numberOfLines={1}
-              >
-                {selectedSchedulerTitle || "Pilih Jadwal Panen..."}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color="#5F6368" />
-            </Pressable>
-          </View>
-
-          {/* Harvest Date Picker */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Tanggal Panen (Harvest Date) <Text style={{ color: "#D93025" }}>*</Text></Text>
-            <Pressable
-              style={styles.dropdownTrigger}
-              onPress={() => setDateModalVisible(true)}
-            >
-              <Text
-                style={[
-                  styles.dropdownTriggerText,
-                  !harvestDate && { color: "#9CA3AF" },
-                ]}
-              >
-                {harvestDate || "Pilih Tanggal Panen..."}
-              </Text>
-              <Ionicons name="calendar-outline" size={20} color="#5F6368" />
-            </Pressable>
-          </View>
-
-          {/* Note Area */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Catatan Panen (Note) <Text style={{ color: "#D93025" }}>*</Text></Text>
-            <TextInput
-              style={styles.textarea}
-              placeholder="Tuliskan catatan detail panen (contoh: Hasil blok A, jumlah janjang sawit)..."
-              placeholderTextColor="#9CA3AF"
-              multiline={true}
-              numberOfLines={4}
-              value={note}
-              onChangeText={setNote}
-            />
-          </View>
-
-          {/* Submit Action */}
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <View style={styles.container}>
+        {/* Segmented Top Header */}
+        <View style={styles.segmentContainer}>
           <Pressable
-            style={({ pressed }) => [
-              styles.submitBtn,
-              pressed && styles.submitBtnPressed,
-              submitting && styles.submitBtnDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={submitting}
+            style={[styles.segmentButton, activeSegment === "create" && styles.activeSegmentButton]}
+            onPress={() => setActiveSegment("create")}
           >
-            {submitting ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <>
-                <Ionicons name="send" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
-                <Text style={styles.submitBtnText}>Kirim Pengajuan</Text>
-              </>
-            )}
+            <Ionicons
+              name="add-circle-outline"
+              size={18}
+              color={activeSegment === "create" ? "#2E7D32" : "#5F6368"}
+              style={{ marginRight: 6 }}
+            />
+            <Text style={[styles.segmentText, activeSegment === "create" && styles.activeSegmentText]}>
+              Buat Pengajuan
+            </Text>
           </Pressable>
-        </ScrollView>
-      ) : (
-        /* Submission History list */
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {requests.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="newspaper-outline" size={48} color="#9CA3AF" />
-              <Text style={styles.emptyText}>Belum ada riwayat pengajuan</Text>
-              <Text style={styles.emptySubtext}>
-                Pengajuan selesai panen yang Anda kirim akan terekam di sini.
-              </Text>
-            </View>
-          ) : (
-            requests.map((req) => {
-              const statusInfo = getStatusBadge(req.status);
-              return (
-                <Pressable
-                  key={req.id}
-                  style={({ pressed }) => [
-                    styles.historyCard,
-                    pressed && styles.historyCardPressed,
+
+          <Pressable
+            style={[styles.segmentButton, activeSegment === "history" && styles.activeSegmentButton]}
+            onPress={() => setActiveSegment("history")}
+          >
+            <Ionicons
+              name="time-outline"
+              size={18}
+              color={activeSegment === "history" ? "#2E7D32" : "#5F6368"}
+              style={{ marginRight: 6 }}
+            />
+            <Text style={[styles.segmentText, activeSegment === "history" && styles.activeSegmentText]}>
+              Riwayat
+            </Text>
+          </Pressable>
+        </View>
+
+        {activeSegment === "create" ? (
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <Text style={styles.screenSubtitle}>
+              Lengkapi detail panen di bawah ini untuk mengajukan selesai panen ke sistem persetujuan.
+            </Text>
+
+            {/* Schedulers Searchable Dropdown */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Jadwal Panen<Text style={{ color: "#D93025" }}>*</Text></Text>
+              <Pressable
+                style={styles.dropdownTrigger}
+                onPress={() => setDropdownVisible(true)}
+              >
+                <Text
+                  style={[
+                    styles.dropdownTriggerText,
+                    !selectedSchedulerTitle && { color: "#9CA3AF" },
                   ]}
-                  onPress={() => router.push(`/submission/${req.id}`)}
+                  numberOfLines={1}
                 >
-                  <View style={styles.historyCardHeader}>
-                    <Text style={styles.historySchedulerTitle} numberOfLines={1}>
-                      {req.schedulerTitle}
-                    </Text>
-                    <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}>
-                      <Text style={[styles.statusBadgeText, { color: statusInfo.text }]}>
-                        {statusInfo.label}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Text style={styles.historyNote} numberOfLines={2}>
-                    {req.note}
-                  </Text>
-
-                  <View style={styles.historyFooter}>
-                    <View style={styles.footerCol}>
-                      <Text style={styles.historyLabel}>Tgl Panen</Text>
-                      <Text style={styles.historyValue}>{req.harvestDate}</Text>
-                    </View>
-
-                    <View style={styles.footerCol}>
-                      <Text style={styles.historyLabel}>Diajukan</Text>
-                      <Text style={styles.historyValue}>{req.submissionDate}</Text>
-                    </View>
-
-                    <View style={[styles.progressBadge]}>
-                      <Ionicons name="people-outline" size={12} color="#5F6368" style={{ marginRight: 4 }} />
-                      <Text style={styles.progressText}>{getApprovalProgress(req)}</Text>
-                    </View>
-                  </View>
-                </Pressable>
-              );
-            })
-          )}
-        </ScrollView>
-      )}
-
-      {/* Schedulers Searchable Dropdown Modal */}
-      <Modal
-        visible={dropdownVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setDropdownVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.dropdownModalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Pilih Jadwal Panen</Text>
-              <Pressable onPress={() => setDropdownVisible(false)}>
-                <Ionicons name="close" size={24} color="#5F6368" />
+                  {selectedSchedulerTitle || "Pilih Jadwal Panen..."}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color="#5F6368" />
               </Pressable>
             </View>
 
-            <View style={styles.searchBarWrapper}>
-              <Ionicons name="search" size={18} color="#9CA3AF" style={{ marginRight: 8 }} />
+            {/* Harvest Date Picker */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Tanggal Panen <Text style={{ color: "#D93025" }}>*</Text></Text>
+              <Pressable
+                style={styles.dropdownTrigger}
+                onPress={() => setDateModalVisible(true)}
+              >
+                <Text
+                  style={[
+                    styles.dropdownTriggerText,
+                    !harvestDate && { color: "#9CA3AF" },
+                  ]}
+                >
+                  {harvestDate || "Pilih Tanggal Panen..."}
+                </Text>
+                <Ionicons name="calendar-outline" size={20} color="#5F6368" />
+              </Pressable>
+            </View>
+
+            {/* Note Area */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Catatan Panen<Text style={{ color: "#D93025" }}>*</Text></Text>
               <TextInput
-                style={styles.searchInput}
-                placeholder="Cari jadwal panen..."
+                style={styles.textarea}
+                placeholder="Tuliskan catatan detail panen (contoh: Hasil blok A, jumlah janjang sawit)..."
                 placeholderTextColor="#9CA3AF"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
+                multiline={true}
+                numberOfLines={4}
+                value={note}
+                onChangeText={setNote}
               />
             </View>
 
-            <ScrollView style={styles.dropdownList} showsVerticalScrollIndicator={true}>
-              {filteredSchedulers.length === 0 ? (
-                <Text style={styles.noResultsText}>Tidak ada jadwal panen ditemukan.</Text>
+            {/* Submit Action */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.submitBtn,
+                pressed && styles.submitBtnPressed,
+                submitting && styles.submitBtnDisabled,
+              ]}
+              onPress={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                filteredSchedulers.map((s) => (
-                  <Pressable
-                    key={s.id}
-                    style={styles.dropdownItem}
-                    onPress={() => handleSelectScheduler(s.id, s.title)}
-                  >
-                    <Ionicons name="time-outline" size={16} color="#2E7D32" style={{ marginRight: 10 }} />
-                    <Text style={styles.dropdownItemText}>{s.title}</Text>
-                  </Pressable>
-                ))
+                <>
+                  <Ionicons name="send" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.submitBtnText}>Kirim Pengajuan</Text>
+                </>
               )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+            </Pressable>
+          </ScrollView>
+        ) : (
+          /* Submission History list */
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            {requests.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="newspaper-outline" size={48} color="#9CA3AF" />
+                <Text style={styles.emptyText}>Belum ada riwayat pengajuan</Text>
+                <Text style={styles.emptySubtext}>
+                  Pengajuan selesai panen yang Anda kirim akan terekam di sini.
+                </Text>
+              </View>
+            ) : (
+              requests.map((req) => {
+                const statusInfo = getStatusBadge(req.status);
+                return (
+                  <Pressable
+                    key={req.id}
+                    style={({ pressed }) => [
+                      styles.historyCard,
+                      pressed && styles.historyCardPressed,
+                    ]}
+                    onPress={() => router.push(`/submission/${req.id}`)}
+                  >
+                    <View style={styles.historyCardHeader}>
+                      <Text style={styles.historySchedulerTitle} numberOfLines={1}>
+                        {req.schedulerTitle}
+                      </Text>
+                      <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}>
+                        <Text style={[styles.statusBadgeText, { color: statusInfo.text }]}>
+                          {statusInfo.label}
+                        </Text>
+                      </View>
+                    </View>
 
-      {/* Custom Premium Date Picker Modal */}
-      <Modal
-        visible={dateModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setDateModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.dateModalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Tentukan Tanggal Panen</Text>
-              <Pressable onPress={() => setDateModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#5F6368" />
+                    <Text style={styles.historyNote} numberOfLines={2}>
+                      {req.note}
+                    </Text>
+
+                    <View style={styles.historyFooter}>
+                      <View style={styles.footerCol}>
+                        <Text style={styles.historyLabel}>Tgl Panen</Text>
+                        <Text style={styles.historyValue}>{req.harvestDate}</Text>
+                      </View>
+
+                      <View style={styles.footerCol}>
+                        <Text style={styles.historyLabel}>Diajukan</Text>
+                        <Text style={styles.historyValue}>{req.submissionDate}</Text>
+                      </View>
+
+                      <View style={[styles.progressBadge]}>
+                        <Ionicons name="people-outline" size={12} color="#5F6368" style={{ marginRight: 4 }} />
+                        <Text style={styles.progressText}>{getApprovalProgress(req)}</Text>
+                      </View>
+                    </View>
+                  </Pressable>
+                );
+              })
+            )}
+          </ScrollView>
+        )}
+
+        {/* Schedulers Searchable Dropdown Modal */}
+        <Modal
+          visible={dropdownVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setDropdownVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.dropdownModalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Pilih Jadwal Panen</Text>
+                <Pressable onPress={() => setDropdownVisible(false)}>
+                  <Ionicons name="close" size={24} color="#5F6368" />
+                </Pressable>
+              </View>
+
+              <View style={styles.searchBarWrapper}>
+                <Ionicons name="search" size={18} color="#9CA3AF" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Cari jadwal panen..."
+                  placeholderTextColor="#9CA3AF"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
+
+              <ScrollView style={styles.dropdownList} showsVerticalScrollIndicator={true}>
+                {filteredSchedulers.length === 0 ? (
+                  <Text style={styles.noResultsText}>Tidak ada jadwal panen ditemukan.</Text>
+                ) : (
+                  filteredSchedulers.map((s) => (
+                    <Pressable
+                      key={s.id}
+                      style={styles.dropdownItem}
+                      onPress={() => handleSelectScheduler(s.id, s.title)}
+                    >
+                      <Ionicons name="time-outline" size={16} color="#2E7D32" style={{ marginRight: 10 }} />
+                      <Text style={styles.dropdownItemText}>{s.title}</Text>
+                    </Pressable>
+                  ))
+                )}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Custom Premium Date Picker Modal */}
+        <Modal
+          visible={dateModalVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setDateModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.dateModalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Tentukan Tanggal Panen</Text>
+                <Pressable onPress={() => setDateModalVisible(false)}>
+                  <Ionicons name="close" size={24} color="#5F6368" />
+                </Pressable>
+              </View>
+
+              <View style={styles.datePickersRow}>
+                {/* Day Input */}
+                <View style={styles.dateCol}>
+                  <Text style={styles.dateColLabel}>Hari</Text>
+                  <TextInput
+                    style={styles.dateInput}
+                    keyboardType="numeric"
+                    maxLength={2}
+                    value={String(selectedDay)}
+                    onChangeText={(text) => {
+                      const val = parseInt(text, 10);
+                      if (!isNaN(val) && val >= 1 && val <= 31) setSelectedDay(val);
+                      else if (text === "") setSelectedDay(1);
+                    }}
+                  />
+                </View>
+
+                {/* Month Input */}
+                <View style={styles.dateCol}>
+                  <Text style={styles.dateColLabel}>Bulan (1-12)</Text>
+                  <TextInput
+                    style={styles.dateInput}
+                    keyboardType="numeric"
+                    maxLength={2}
+                    value={String(selectedMonth)}
+                    onChangeText={(text) => {
+                      const val = parseInt(text, 10);
+                      if (!isNaN(val) && val >= 1 && val <= 12) setSelectedMonth(val);
+                      else if (text === "") setSelectedMonth(1);
+                    }}
+                  />
+                </View>
+
+                {/* Year Input */}
+                <View style={styles.dateCol}>
+                  <Text style={styles.dateColLabel}>Tahun</Text>
+                  <TextInput
+                    style={styles.dateInput}
+                    keyboardType="numeric"
+                    maxLength={4}
+                    value={String(selectedYear)}
+                    onChangeText={(text) => {
+                      const val = parseInt(text, 10);
+                      if (!isNaN(val)) setSelectedYear(val);
+                      else if (text === "") setSelectedYear(new Date().getFullYear());
+                    }}
+                  />
+                </View>
+              </View>
+
+              <Pressable style={styles.dateConfirmBtn} onPress={handleConfirmDate}>
+                <Text style={styles.dateConfirmBtnText}>Konfirmasi Tanggal</Text>
               </Pressable>
             </View>
-
-            <View style={styles.datePickersRow}>
-              {/* Day Input */}
-              <View style={styles.dateCol}>
-                <Text style={styles.dateColLabel}>Hari</Text>
-                <TextInput
-                  style={styles.dateInput}
-                  keyboardType="numeric"
-                  maxLength={2}
-                  value={String(selectedDay)}
-                  onChangeText={(text) => {
-                    const val = parseInt(text, 10);
-                    if (!isNaN(val) && val >= 1 && val <= 31) setSelectedDay(val);
-                    else if (text === "") setSelectedDay(1);
-                  }}
-                />
-              </View>
-
-              {/* Month Input */}
-              <View style={styles.dateCol}>
-                <Text style={styles.dateColLabel}>Bulan (1-12)</Text>
-                <TextInput
-                  style={styles.dateInput}
-                  keyboardType="numeric"
-                  maxLength={2}
-                  value={String(selectedMonth)}
-                  onChangeText={(text) => {
-                    const val = parseInt(text, 10);
-                    if (!isNaN(val) && val >= 1 && val <= 12) setSelectedMonth(val);
-                    else if (text === "") setSelectedMonth(1);
-                  }}
-                />
-              </View>
-
-              {/* Year Input */}
-              <View style={styles.dateCol}>
-                <Text style={styles.dateColLabel}>Tahun</Text>
-                <TextInput
-                  style={styles.dateInput}
-                  keyboardType="numeric"
-                  maxLength={4}
-                  value={String(selectedYear)}
-                  onChangeText={(text) => {
-                    const val = parseInt(text, 10);
-                    if (!isNaN(val)) setSelectedYear(val);
-                    else if (text === "") setSelectedYear(new Date().getFullYear());
-                  }}
-                />
-              </View>
-            </View>
-
-            <Pressable style={styles.dateConfirmBtn} onPress={handleConfirmDate}>
-              <Text style={styles.dateConfirmBtnText}>Konfirmasi Tanggal</Text>
-            </Pressable>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F3F4F6",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F3F4F6",

@@ -1,23 +1,36 @@
-import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  Platform,
-  ScrollView,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
+import { router } from "expo-router";
+import React, { useEffect } from "react";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
+import { HOME_QUICK_ACTIONS } from "@/config/app.config";
+import { getPendingApprovals } from "@/shared/utils/approval.utils";
 import { useAuthStore } from "@/store/auth.store";
+import { useHarvestStore } from "@/store/harvest.store";
 import { useNotificationStore } from "@/store/notification.store";
 
 function HomeScreen() {
   const user = useAuthStore((state) => state.user);
   const notifications = useNotificationStore((state) => state.notifications);
+  const requests = useHarvestStore((state) => state.requests);
+  const fetchRequests = useHarvestStore((state) => state.fetchRequests);
+
+  // Fetch requests on mount
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const currentUserId = user?.id || "";
+  const pendingApprovals = getPendingApprovals(requests, currentUserId);
 
   // Dynamic greeting based on current local time
   const getGreeting = () => {
@@ -47,33 +60,16 @@ function HomeScreen() {
   // Calculate unread notifications count for badge
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const quickActions = [
-    {
-      id: "instant-reminder",
-      label: "Pengingat Instant",
-      icon: "notifications-outline",
-      bgColor: "#E8F0FE", // pastel blue
-      iconColor: "#1A73E8",
-      onPress: () => router.push("/reminder/create"),
-    },
-    {
-      id: "inbox",
-      label: "Kotak Masuk",
-      icon: "mail-outline",
-      bgColor: "#FCE8E6", // pastel red/pink
-      iconColor: "#D93025",
-      badge: unreadCount > 0 ? unreadCount : undefined,
-      onPress: () => router.push("/(tabs)/inbox"),
-    },
-    {
-      id: "selesai-panen",
-      label: "Selesai Panen",
-      icon: "leaf-outline",
-      bgColor: "#E6F4EA", // pastel light green
-      iconColor: "#137333",
-      onPress: () => router.push("/(tabs)/request"),
-    },
-  ];
+  const quickActions = HOME_QUICK_ACTIONS.map((item) => ({
+    ...item,
+    badge:
+      item.id === "inbox"
+        ? unreadCount || undefined
+        : item.id === "approval"
+        ? pendingApprovals.length || undefined
+        : undefined,
+    onPress: () => router.push(item.route as any),
+  }));
 
   // Show top 3 notifications in the home page
   const homeAnnouncements = notifications.slice(0, 3);

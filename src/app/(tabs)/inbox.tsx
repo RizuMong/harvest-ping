@@ -1,19 +1,19 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-  RefreshControl,
-  Modal,
   Alert,
-  Platform,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 
-import { useNotificationStore, Notification } from "@/store/notification.store";
+import { PRIORITY_BADGE_STYLES } from "@/config/app.config";
+import { Notification, useNotificationStore } from "@/store/notification.store";
 
 export default function InboxScreen() {
   const notifications = useNotificationStore((state) => state.notifications);
@@ -73,30 +73,10 @@ export default function InboxScreen() {
     );
   };
 
-  // Get color styled badge based on priority
-  const getPriorityStyle = (priority: string) => {
-    switch (priority) {
-      case "Tinggi":
-        return {
-          bg: "#FCE8E6", // soft red
-          text: "#D93025",
-          border: "#FAD2CF",
-        };
-      case "Normal":
-        return {
-          bg: "#FEF7E0", // soft orange/yellow
-          text: "#B06000",
-          border: "#FEEFC3",
-        };
-      case "Rendah":
-      default:
-        return {
-          bg: "#E8F0FE", // soft blue/green
-          text: "#1A73E8",
-          border: "#D2E3FC",
-        };
-    }
-  };
+  const getPriorityStyle = (priority: string) =>
+    PRIORITY_BADGE_STYLES[priority as keyof typeof PRIORITY_BADGE_STYLES] ||
+    PRIORITY_BADGE_STYLES.Rendah;
+
 
   const activeNotifications =
     activeTab === "unconfirmed" ? unconfirmedNotifications : confirmedNotifications;

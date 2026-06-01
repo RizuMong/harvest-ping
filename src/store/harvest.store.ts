@@ -1,7 +1,13 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  ApprovalLineStatus,
+  DEFAULT_APPROVERS,
+  DEFAULT_SCHEDULERS,
+  RequestStatus,
+} from "@/config/app.config";
 import { supabase } from "@/services/supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface ApproverConfig {
   id: string;
@@ -13,7 +19,7 @@ export interface ApproverConfig {
 export interface ApprovalLine {
   approverId: string;
   approverName: string;
-  status: "Waiting" | "Approved" | "Rejected";
+  status: ApprovalLineStatus;
   actionDate?: string;
   remarks?: string;
 }
@@ -24,7 +30,7 @@ export interface FinishHarvestRequest {
   schedulerTitle: string;
   harvestDate: string;
   note: string;
-  status: "submitted" | "approved" | "rejected";
+  status: RequestStatus;
   submissionDate: string;
   userId: string;
   userName: string;
@@ -60,25 +66,12 @@ interface HarvestState {
   reorderApproverConfig: (configs: ApproverConfig[]) => Promise<void>;
 }
 
-// Initial default schedulers if empty
-const defaultSchedulers: Scheduler[] = [
-  { id: "1", title: "Jadwal Panen Pagi - Blok A (06:00 - 10:00)" },
-  { id: "2", title: "Jadwal Panen Siang - Blok B (10:00 - 14:00)" },
-  { id: "3", title: "Jadwal Panen Sore - Blok C (14:00 - 18:00)" },
-];
-
-// Initial default approvers
-const defaultApprovers: ApproverConfig[] = [
-  { id: "1", userId: "2", userName: "Cindy Yolanda Octavia", sequence: 1 },
-  { id: "2", userId: "3", userName: "Dian Wahyu Pratama", sequence: 2 },
-];
-
 export const useHarvestStore = create<HarvestState>()(
   persist(
     (set, get) => ({
       requests: [],
-      schedulers: defaultSchedulers,
-      approverConfigs: defaultApprovers,
+      schedulers: DEFAULT_SCHEDULERS as Scheduler[],
+      approverConfigs: DEFAULT_APPROVERS as ApproverConfig[],
       loading: false,
 
       fetchSchedulers: async () => {
@@ -93,14 +86,14 @@ export const useHarvestStore = create<HarvestState>()(
           } else {
             // Seed DB table t_ping_scheduller if it exists but empty
             if (!error) {
-              const seedData = defaultSchedulers.map(s => ({ id: parseInt(s.id, 10), title: s.title }));
+              const seedData = DEFAULT_SCHEDULERS.map((s) => ({ id: parseInt(s.id, 10), title: s.title }));
               await supabase.from("t_ping_scheduller").insert(seedData);
             }
-            set({ schedulers: defaultSchedulers });
+            set({ schedulers: DEFAULT_SCHEDULERS as Scheduler[] });
           }
         } catch (err) {
           console.error("fetchSchedulers error:", err);
-          set({ schedulers: defaultSchedulers });
+          set({ schedulers: DEFAULT_SCHEDULERS as Scheduler[] });
         } finally {
           set({ loading: false });
         }

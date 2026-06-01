@@ -1,3 +1,8 @@
+import {
+  INITIAL_NOTIFICATIONS,
+  NotificationPriority,
+  NotificationType,
+} from "@/config/app.config";
 import { create } from "zustand";
 
 export interface Notification {
@@ -10,8 +15,8 @@ export interface Notification {
   senderInitials: string;
   read: boolean;
   is_acknowledged: boolean;
-  priority: "Tinggi" | "Normal" | "Rendah";
-  type: "reminder" | "announcement" | "approval";
+  priority: NotificationPriority;
+  type: NotificationType;
 }
 
 interface NotificationState {
@@ -20,54 +25,16 @@ interface NotificationState {
     title: string,
     message: string,
     sender: string,
-    priority?: "Tinggi" | "Normal" | "Rendah"
+    priority?: NotificationPriority
   ) => void;
   markAllAsRead: () => void;
   markAsRead: (id: string) => void;
   acknowledgeNotification: (id: string) => void;
 }
 
-const initialNotifications: Notification[] = [
-  {
-    id: "1",
-    title: "Pengingat: Waktunya Input Laporan Panen",
-    message: "Harap segera menginput data hasil panen hari ini untuk Blok A.",
-    date: "01 Jun 2026",
-    time: "14:30",
-    sender: "Cindy Yolanda Octavia",
-    senderInitials: "CY",
-    read: false,
-    is_acknowledged: false,
-    priority: "Tinggi",
-    type: "reminder",
-  },
-  {
-    id: "2",
-    title: "Standard Operational Procedure Pemupukan Blok A & B",
-    message: "Berikut adalah panduan terbaru pemupukan Kelapa Sawit untuk Blok A dan Blok B.",
-    date: "25 May 2026",
-    time: "09:00",
-    sender: "Dian Wahyu Pratama",
-    senderInitials: "DP",
-    read: true,
-    is_acknowledged: true,
-    priority: "Normal",
-    type: "announcement",
-  },
-  {
-    id: "3",
-    title: "Jadwal Kerja Bergilir Periode Juni 2026",
-    message: "Silakan periksa jadwal kerja bergilir untuk bulan Juni 2026 pada lampiran berikut.",
-    date: "18 May 2026",
-    time: "11:15",
-    sender: "Cindy Yolanda Octavia",
-    senderInitials: "CY",
-    read: true,
-    is_acknowledged: true,
-    priority: "Rendah",
-    type: "announcement",
-  },
-];
+const initialNotifications: Notification[] = INITIAL_NOTIFICATIONS.map((item) => ({
+  ...item,
+}));
 
 export const useNotificationStore = create<NotificationState>((set) => ({
   notifications: initialNotifications,

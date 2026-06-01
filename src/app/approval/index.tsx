@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function ApprovalTabScreen() {
+export default function ApprovalListScreen() {
   const user = useAuthStore((state) => state.user);
   const requests = useHarvestStore((state) => state.requests);
   const fetchRequests = useHarvestStore((state) => state.fetchRequests);
@@ -30,7 +30,11 @@ export default function ApprovalTabScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color="#2E7D32" />
+        </Pressable>
         <Text style={styles.headerTitle}>Persetujuan Panen</Text>
+        <View style={styles.backButton} />
       </View>
 
       {loading && pendingApprovals.length === 0 ? (
@@ -110,14 +114,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     height: 56,
     justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#1F2937",
+    flex: 1,
+    textAlign: "center",
   },
   scrollContent: {
     padding: 16,

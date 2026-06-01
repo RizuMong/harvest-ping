@@ -1,15 +1,16 @@
+import { APPROVAL_LINE_META, REQUEST_STATUS_BADGES } from "@/config/app.config";
+import { useHarvestStore } from "@/store/harvest.store";
+import { Ionicons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
+  ActivityIndicator,
   Pressable,
   ScrollView,
-  ActivityIndicator,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useHarvestStore } from "@/store/harvest.store";
 
 export default function SubmissionDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -44,32 +45,8 @@ export default function SubmissionDetailScreen() {
     );
   }
 
-  // Get badge color
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "approved":
-        return { bg: "#E6F4EA", text: "#137333", label: "Approved" };
-      case "rejected":
-        return { bg: "#FCE8E6", text: "#C5221F", label: "Rejected" };
-      case "submitted":
-      default:
-        return { bg: "#E8F0FE", text: "#1A73E8", label: "Submitted" };
-    }
-  };
-
-  const getLineStatusIcon = (status: string) => {
-    switch (status) {
-      case "Approved":
-        return <Ionicons name="checkmark-circle" size={20} color="#137333" />;
-      case "Rejected":
-        return <Ionicons name="close-circle" size={20} color="#C5221F" />;
-      case "Waiting":
-      default:
-        return <Ionicons name="time" size={20} color="#1A73E8" />;
-    }
-  };
-
-  const statusInfo = getStatusBadge(request.status);
+  const statusInfo =
+    REQUEST_STATUS_BADGES[request.status] || REQUEST_STATUS_BADGES.submitted;
 
   // Generate dynamic timeline / activity log
   const timelineEvents = [
@@ -83,14 +60,17 @@ export default function SubmissionDetailScreen() {
     },
     ...request.approvalLines
       .filter((l) => l.status !== "Waiting")
-      .map((l) => ({
-        title: l.status === "Approved" ? "Disetujui" : "Ditolak",
-        subtitle: `Oleh ${l.approverName}${l.remarks ? ` - "${l.remarks}"` : ""}`,
-        date: l.actionDate || "—",
-        icon: l.status === "Approved" ? "checkmark-circle" : "close-circle",
-        iconBg: l.status === "Approved" ? "#E6F4EA" : "#FCE8E6",
-        iconColor: l.status === "Approved" ? "#137333" : "#C5221F",
-      })),
+      .map((l) => {
+        const lineMeta = APPROVAL_LINE_META[l.status];
+        return {
+          title: l.status === "Approved" ? "Disetujui" : "Ditolak",
+          subtitle: `Oleh ${l.approverName}${l.remarks ? ` - "${l.remarks}"` : ""}`,
+          date: l.actionDate || "—",
+          icon: lineMeta.icon,
+          iconBg: lineMeta.iconBg,
+          iconColor: lineMeta.iconColor,
+        };
+      }),
   ];
 
   return (
@@ -142,38 +122,43 @@ export default function SubmissionDetailScreen() {
           {request.approvalLines.length === 0 ? (
             <Text style={styles.emptyText}>Tidak ada alur persetujuan terkonfigurasi.</Text>
           ) : (
-            request.approvalLines.map((line, index) => (
-              <View
-                key={line.approverId}
-                style={[
-                  styles.approverRow,
-                  index === request.approvalLines.length - 1 && styles.lastApproverRow,
-                ]}
-              >
-                <View style={styles.approverLeft}>
-                  {getLineStatusIcon(line.status)}
-                  <View style={styles.approverInfo}>
-                    <Text style={styles.approverName}>{line.approverName}</Text>
-                    {line.actionDate && (
-                      <Text style={styles.actionDate}>Pada: {line.actionDate}</Text>
-                    )}
-                    {line.remarks && (
-                      <Text style={styles.remarksText}>Catatan: "{line.remarks}"</Text>
-                    )}
-                  </View>
-                </View>
-                <Text
+            request.approvalLines.map((line, index) => {
+              const lineMeta = APPROVAL_LINE_META[line.status];
+              return (
+                <View
+                  key={line.approverId}
                   style={[
-                    styles.lineStatusText,
-                    line.status === "Approved" && { color: "#137333" },
-                    line.status === "Rejected" && { color: "#C5221F" },
-                    line.status === "Waiting" && { color: "#1A73E8" },
+                    styles.approverRow,
+                    index === request.approvalLines.length - 1 && styles.lastApproverRow,
                   ]}
                 >
-                  {line.status}
-                </Text>
-              </View>
-            ))
+                  <View style={styles.approverLeft}>
+                    <View style={[styles.lineIcon, { backgroundColor: lineMeta.iconBg }]}> 
+                      <Ionicons name={lineMeta.icon as any} size={20} color={lineMeta.iconColor} />
+                    </View>
+                    <View style={styles.approverInfo}>
+                      <Text style={styles.approverName}>{line.approverName}</Text>
+                      {line.actionDate && (
+                        <Text style={styles.actionDate}>Pada: {line.actionDate}</Text>
+                      )}
+                      {line.remarks && (
+                        <Text style={styles.remarksText}>Catatan: "{line.remarks}"</Text>
+                      )}
+                    </View>
+                  </View>
+                  <Text
+                    style={[
+                      styles.lineStatusText,
+                      line.status === "Approved" && { color: "#137333" },
+                      line.status === "Rejected" && { color: "#C5221F" },
+                      line.status === "Waiting" && { color: "#1A73E8" },
+                    ]}
+                  >
+                    {line.status}
+                  </Text>
+                </View>
+              );
+            })
           )}
         </View>
 
@@ -358,6 +343,13 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     flex: 1,
     paddingRight: 10,
+  },
+  lineIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
   },
   approverInfo: {
     marginLeft: 10,
