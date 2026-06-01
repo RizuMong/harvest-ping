@@ -15,13 +15,20 @@ export interface ApprovalLineConfig {
     iconColor: string;
 }
 
+export type HomeQuickActionRoute =
+    | "/reminder/create"
+    | "/(tabs)/inbox"
+    | "/(tabs)/request"
+    | "/(tabs)/scheduler"
+    | "/approval";
+
 export interface HomeQuickAction {
     id: string;
     label: string;
     icon: string;
     bgColor: string;
     iconColor: string;
-    route: string;
+    route: HomeQuickActionRoute;
 }
 
 export const REQUEST_STATUS_BADGES: Record<RequestStatus, StatusBadgeConfig> = {
