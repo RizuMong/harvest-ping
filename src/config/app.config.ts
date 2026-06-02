@@ -89,8 +89,7 @@ export const PRIORITY_BADGE_STYLES = {
 export const DEFAULT_SCHEDULERS = [];
 
 export const DEFAULT_APPROVERS = [
-    { id: "1", userName: "Cindy Yolanda Octavia", sequence: 1 },
-    { id: "2", userName: "Dian Wahyu Pratama", sequence: 2 },
+    { id: "1", userName: "Rizki Haddi", sequence: 1 },
 ];
 
 export const INITIAL_NOTIFICATIONS = [
