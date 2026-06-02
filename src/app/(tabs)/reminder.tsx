@@ -1,17 +1,72 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useNotificationStore } from "@/store/notification.store";
+import InstantReminderForm from "@/components/InstantReminderForm";
+import { supabase } from "@/services/supabase";
+
+interface ReminderItem {
+  id: string;
+  title: string;
+  message: string;
+  priority: string | null;
+  scheduleType: string | null;
+  isAcknowledged: boolean;
+  createdAt: string | null;
+  receiverId: string | null;
+}
 
 export default function ReminderScreen() {
-  const notifications = useNotificationStore((state) => state.notifications);
-  const reminderNotifications = useMemo(
-    () => notifications.filter((item) => item.type === "reminder"),
-    [notifications]
-  );
+  const [reminders, setReminders] = useState<ReminderItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const fetchReminders = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("t_ping_reminder")
+        .select("id, title, message, priority, schedule_type, is_acknowledged, created_at, receiver_id")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("fetch reminders error:", error);
+        Alert.alert("Error", "Gagal memuat daftar pengingat.");
+        setReminders([]);
+      } else if (data) {
+        setReminders(
+          data.map((row: any) => ({
+            id: String(row.id),
+            title: row.title || "-",
+            message: row.message || "-",
+            priority: row.priority || "Normal",
+            scheduleType: row.schedule_type || "Panen",
+            isAcknowledged: !!row.is_acknowledged,
+            createdAt: row.created_at || null,
+            receiverId: row.receiver_id ? String(row.receiver_id) : null,
+          }))
+        );
+      }
+    } catch (err) {
+      console.error("fetch reminders catch:", err);
+      Alert.alert("Error", "Terjadi kesalahan saat memuat pengingat.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReminders();
+  }, []);
+
+  const reminderNotifications = useMemo(() => reminders, [reminders]);
+
+  const formatTimestamp = (timestamp: string | null) => {
+    if (!timestamp) return "-";
+    const date = new Date(timestamp);
+    return `${date.toLocaleDateString("id-ID", { day: "2-digit", month: "short" })} ${date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -30,7 +85,12 @@ export default function ReminderScreen() {
             <Text style={styles.sectionTitle}>Daftar Pengingat</Text>
           </View>
 
-          {reminderNotifications.length === 0 ? (
+          {loading ? (
+            <View style={styles.emptyState}>
+              <ActivityIndicator size="large" color="#2E7D32" />
+              <Text style={[styles.emptyText, { marginTop: 16 }]}>Memuat pengingat...</Text>
+            </View>
+          ) : reminderNotifications.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="notifications-off-outline" size={48} color="#9CA3AF" />
               <Text style={styles.emptyText}>Belum ada pengingat instant yang dibuat.</Text>
@@ -58,9 +118,9 @@ export default function ReminderScreen() {
                   {item.message}
                 </Text>
                 <View style={styles.reminderFooter}>
-                  <Text style={styles.metaText}>{item.date} {item.time}</Text>
+                  <Text style={styles.metaText}>{formatTimestamp(item.createdAt)}</Text>
                   <Text style={styles.metaText}>
-                    {item.receiverNames?.length ? `${item.receiverNames.length} penerima` : "Penerima belum dipilih"}
+                    {item.receiverId ? "1 penerima" : "Penerima belum dipilih"}
                   </Text>
                 </View>
               </View>
@@ -69,9 +129,32 @@ export default function ReminderScreen() {
         </View>
       </ScrollView>
 
-      <Pressable style={styles.fab} onPress={() => router.push("/reminder/create") }>
+      <Pressable style={styles.fab} onPress={() => setModalVisible(true)}>
         <Ionicons name="add" size={28} color="#FFFFFF" />
       </Pressable>
+
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <InstantReminderForm
+              onClose={() => setModalVisible(false)}
+              onSuccess={() => {
+                setModalVisible(false);
+                fetchReminders();
+              }}
+              submitLabel="Kirim Pengingat Sekarang"
+              titleText="Buat Pengingat Instant"
+              subtitleText="Kirimkan pengingat langsung ke seluruh anggota tim yang terdaftar."
+              closeIcon
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -218,5 +301,17 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
     elevation: 6,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#F4F7F5",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 28,
+    minHeight: "80%",
   },
 });

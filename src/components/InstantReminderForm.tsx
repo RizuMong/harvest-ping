@@ -1,6 +1,5 @@
 import { supabase } from "@/services/supabase";
 import { useAuthStore } from "@/store/auth.store";
-import { useNotificationStore } from "@/store/notification.store";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -45,7 +44,6 @@ export default function InstantReminderForm({
   closeIcon = false,
 }: InstantReminderFormProps) {
   const user = useAuthStore((state) => state.user);
-  const addNotification = useNotificationStore((state) => state.addNotification);
 
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -121,29 +119,42 @@ export default function InstantReminderForm({
     onClose?.();
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
+    setLoading(true);
+
     if (!title.trim() || !message.trim()) {
       Alert.alert("Error", "Judul dan Pesan pengingat harus diisi");
+      setLoading(false);
       return;
     }
+
     if (selectedReceiverIds.length === 0) {
       Alert.alert("Error", "Pilih minimal satu penerima.");
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    addNotification(
-      title.trim(),
-      message.trim(),
-      user?.name || "Rizki Haddi Prayoga",
+    const creatorId = user?.id ? parseInt(user.id, 10) : 1;
+    const rows = selectedReceiverIds.map((receiver_id) => ({
+      receiver_id: parseInt(receiver_id, 10),
+      title: title.trim(),
+      message: message.trim(),
       priority,
-      scheduleType,
-      selectedReceiverIds,
-      selectedReceiverNames
-    );
+      schedule_type: scheduleType,
+      is_acknowledged: false,
+      created_by: creatorId,
+      updated_by: creatorId,
+      created_at: new Date().toISOString(),
+    }));
 
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const { error } = await supabase.from("t_ping_reminder").insert(rows);
+      if (error) {
+        console.error("save reminder error:", error);
+        Alert.alert("Gagal", "Tidak dapat menyimpan pengingat. Silakan coba lagi.");
+        return;
+      }
+
       resetForm();
       Alert.alert("Sukses", "Pengingat instant berhasil dibuat!", [
         {
@@ -153,7 +164,12 @@ export default function InstantReminderForm({
           },
         },
       ]);
-    }, 400);
+    } catch (err: any) {
+      console.error("save reminder catch:", err);
+      Alert.alert("Gagal", "Terjadi kesalahan saat menyimpan pengingat.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const buttonDisabled = loading;
