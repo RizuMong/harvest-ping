@@ -1,14 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
-  Alert,
-  Modal,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View
+    Alert,
+    Modal,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -265,26 +265,18 @@ export default function InboxScreen() {
                     Dibuat: {selectedNotif.date} pada {selectedNotif.time || "12:00"}
                   </Text>
                 </View>
-
-                {/* Primary Title */}
-                <Text style={styles.modalNotificationTitle}>{selectedNotif.title}</Text>
-
-                {/* Message Body */}
-                <View style={styles.messageBox}>
-                  <Text style={styles.modalMessageText}>{selectedNotif.message}</Text>
-                </View>
-
-                {/* Sender Info block */}
-                <Text style={styles.infoSectionHeader}>Pengirim Laporan</Text>
-                <View style={styles.senderDetailCard}>
-                  <View style={styles.senderAvatarLarge}>
-                    <Text style={styles.senderAvatarLargeText}>{selectedNotif.senderInitials}</Text>
+                {selectedNotif.scheduleType && (
+                  <View style={styles.detailMetaRow}>
+                    <Text style={styles.detailMetaLabel}>Tipe Jadwal</Text>
+                    <Text style={styles.detailMetaValue}>{selectedNotif.scheduleType}</Text>
                   </View>
-                  <View>
-                    <Text style={styles.senderDetailName}>{selectedNotif.sender}</Text>
-                    <Text style={styles.senderDetailSubtitle}>Tim Mandor Operasional</Text>
+                )}
+                {selectedNotif.receiverNames && selectedNotif.receiverNames.length > 0 && (
+                  <View style={styles.detailMetaRow}>
+                    <Text style={styles.detailMetaLabel}>Penerima</Text>
+                    <Text style={styles.detailMetaValue}>{selectedNotif.receiverNames.join(", ")}</Text>
                   </View>
-                </View>
+                )}
               </ScrollView>
 
               {/* Action Buttons */}
@@ -577,6 +569,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#9CA3AF",
     fontWeight: "500",
+  },
+  detailMetaRow: {
+    marginBottom: 10,
+  },
+  detailMetaLabel: {
+    color: "#6B7280",
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  detailMetaValue: {
+    color: "#111827",
+    fontSize: 14,
+    fontWeight: "600",
   },
   modalNotificationTitle: {
     fontSize: 18,

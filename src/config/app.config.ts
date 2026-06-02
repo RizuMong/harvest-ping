@@ -16,6 +16,7 @@ export interface ApprovalLineConfig {
 }
 
 export type HomeQuickActionRoute =
+    | "/(tabs)/reminder"
     | "/reminder/create"
     | "/(tabs)/inbox"
     | "/(tabs)/request"
@@ -85,15 +86,11 @@ export const PRIORITY_BADGE_STYLES = {
     },
 } as const;
 
-export const DEFAULT_SCHEDULERS = [
-    { id: "1", title: "Jadwal Panen Pagi - Blok A (06:00 - 10:00)" },
-    { id: "2", title: "Jadwal Panen Siang - Blok B (10:00 - 14:00)" },
-    { id: "3", title: "Jadwal Panen Sore - Blok C (14:00 - 18:00)" },
-];
+export const DEFAULT_SCHEDULERS = [];
 
 export const DEFAULT_APPROVERS = [
-    { id: "1", userId: "2", userName: "Cindy Yolanda Octavia", sequence: 1 },
-    { id: "2", userId: "3", userName: "Dian Wahyu Pratama", sequence: 2 },
+    { id: "1", userName: "Cindy Yolanda Octavia", sequence: 1 },
+    { id: "2", userName: "Dian Wahyu Pratama", sequence: 2 },
 ];
 
 export const INITIAL_NOTIFICATIONS = [
@@ -145,7 +142,7 @@ export const HOME_QUICK_ACTIONS: HomeQuickAction[] = [
         icon: "notifications-outline",
         bgColor: "#E8F0FE",
         iconColor: "#1A73E8",
-        route: "/reminder/create",
+        route: "/(tabs)/reminder",
     },
     {
         id: "reminder-scheduler",

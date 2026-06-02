@@ -1,7 +1,7 @@
 import {
-  INITIAL_NOTIFICATIONS,
-  NotificationPriority,
-  NotificationType,
+    INITIAL_NOTIFICATIONS,
+    NotificationPriority,
+    NotificationType,
 } from "@/config/app.config";
 import { create } from "zustand";
 
@@ -17,6 +17,9 @@ export interface Notification {
   is_acknowledged: boolean;
   priority: NotificationPriority;
   type: NotificationType;
+  scheduleType?: "Panen" | "Perawatan";
+  receiverIds?: string[];
+  receiverNames?: string[];
 }
 
 interface NotificationState {
@@ -25,7 +28,10 @@ interface NotificationState {
     title: string,
     message: string,
     sender: string,
-    priority?: NotificationPriority
+    priority?: NotificationPriority,
+    scheduleType?: "Panen" | "Perawatan",
+    receiverIds?: string[],
+    receiverNames?: string[]
   ) => void;
   markAllAsRead: () => void;
   markAsRead: (id: string) => void;
@@ -38,7 +44,15 @@ const initialNotifications: Notification[] = INITIAL_NOTIFICATIONS.map((item) =>
 
 export const useNotificationStore = create<NotificationState>((set) => ({
   notifications: initialNotifications,
-  addNotification: (title, message, sender, priority = "Normal") => {
+  addNotification: (
+    title,
+    message,
+    sender,
+    priority = "Normal",
+    scheduleType,
+    receiverIds,
+    receiverNames
+  ) => {
     const initials = sender
       .split(" ")
       .map((n) => n[0])
@@ -58,6 +72,9 @@ export const useNotificationStore = create<NotificationState>((set) => ({
       is_acknowledged: false,
       priority,
       type: "reminder",
+      scheduleType,
+      receiverIds,
+      receiverNames,
     };
 
     set((state) => ({

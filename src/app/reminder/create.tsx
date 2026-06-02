@@ -1,21 +1,21 @@
-import React, { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Pressable,
-  Platform,
-  ScrollView,
-  KeyboardAvoidingView,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 
-import { useNotificationStore } from "@/store/notification.store";
 import { useAuthStore } from "@/store/auth.store";
+import { useNotificationStore } from "@/store/notification.store";
 
 export default function CreateReminderScreen() {
   const user = useAuthStore((state) => state.user);
@@ -44,7 +44,7 @@ export default function CreateReminderScreen() {
       Alert.alert("Sukses", "Pengingat instant berhasil dikirim!", [
         {
           text: "OK",
-          onPress: () => router.replace("/(tabs)/home"),
+          onPress: () => router.replace("/reminder"),
         },
       ]);
     }, 600);
