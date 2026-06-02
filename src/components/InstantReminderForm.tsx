@@ -140,7 +140,6 @@ export default function InstantReminderForm({
       title: title.trim(),
       message: message.trim(),
       priority,
-      schedule_type: scheduleType,
       is_acknowledged: false,
       created_by: creatorId,
       updated_by: creatorId,

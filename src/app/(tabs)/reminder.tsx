@@ -11,7 +11,6 @@ interface ReminderItem {
   title: string;
   message: string;
   priority: string | null;
-  scheduleType: string | null;
   isAcknowledged: boolean;
   createdAt: string | null;
   receiverId: string | null;
@@ -27,7 +26,7 @@ export default function ReminderScreen() {
     try {
       const { data, error } = await supabase
         .from("t_ping_reminder")
-        .select("id, title, message, priority, schedule_type, is_acknowledged, created_at, receiver_id")
+        .select("id, title, message, priority, is_acknowledged, created_at, receiver_id")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -41,7 +40,6 @@ export default function ReminderScreen() {
             title: row.title || "-",
             message: row.message || "-",
             priority: row.priority || "Normal",
-            scheduleType: row.schedule_type || "Panen",
             isAcknowledged: !!row.is_acknowledged,
             createdAt: row.created_at || null,
             receiverId: row.receiver_id ? String(row.receiver_id) : null,
@@ -106,9 +104,6 @@ export default function ReminderScreen() {
                     {item.title}
                   </Text>
                   <View style={styles.reminderBadgeRow}>
-                    <View style={styles.typeBadge}>
-                      <Text style={styles.typeBadgeText}>{item.scheduleType || "Panen"}</Text>
-                    </View>
                     <View style={styles.priorityBadge}>
                       <Text style={styles.priorityBadgeText}>{item.priority}</Text>
                     </View>
@@ -249,17 +244,6 @@ const styles = StyleSheet.create({
   reminderBadgeRow: {
     flexDirection: "row",
     gap: 8,
-  },
-  typeBadge: {
-    backgroundColor: "#E0F2FE",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  typeBadgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#0C4A6E",
   },
   priorityBadge: {
     backgroundColor: "#FEF3C7",
