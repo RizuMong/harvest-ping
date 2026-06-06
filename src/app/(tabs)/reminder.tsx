@@ -4,58 +4,27 @@ import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Tex
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import InstantReminderForm from "@/components/InstantReminderForm";
-import { supabase } from "@/services/supabase";
-
-interface ReminderItem {
-  id: string;
-  title: string;
-  message: string;
-  priority: string | null;
-  isAcknowledged: boolean;
-  createdAt: string | null;
-  receiverId: string | null;
-}
+import { fetchReminders, ReminderItem } from "@/services/reminder.service";
 
 export default function ReminderScreen() {
   const [reminders, setReminders] = useState<ReminderItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const fetchReminders = async () => {
+  const loadReminders = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("t_ping_reminder")
-        .select("id, title, message, priority, is_acknowledged, created_at, receiver_id")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("fetch reminders error:", error);
-        Alert.alert("Error", "Gagal memuat daftar pengingat.");
-        setReminders([]);
-      } else if (data) {
-        setReminders(
-          data.map((row: any) => ({
-            id: String(row.id),
-            title: row.title || "-",
-            message: row.message || "-",
-            priority: row.priority || "Normal",
-            isAcknowledged: !!row.is_acknowledged,
-            createdAt: row.created_at || null,
-            receiverId: row.receiver_id ? String(row.receiver_id) : null,
-          }))
-        );
-      }
-    } catch (err) {
-      console.error("fetch reminders catch:", err);
-      Alert.alert("Error", "Terjadi kesalahan saat memuat pengingat.");
+      const data = await fetchReminders();
+      setReminders(data);
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Terjadi kesalahan saat memuat pengingat.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchReminders();
+    loadReminders();
   }, []);
 
   const reminderNotifications = useMemo(() => reminders, [reminders]);
@@ -140,7 +109,7 @@ export default function ReminderScreen() {
               onClose={() => setModalVisible(false)}
               onSuccess={() => {
                 setModalVisible(false);
-                fetchReminders();
+                loadReminders();
               }}
               submitLabel="Kirim Pengingat Sekarang"
               titleText="Buat Pengingat Instant"

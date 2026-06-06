@@ -14,8 +14,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PRIORITY_BADGE_STYLES } from "@/config/app.config";
-import { supabase } from "@/services/supabase";
 import { useAuthStore } from "@/store/auth.store";
+import { fetchUsers } from "@/services/user.service";
+import { fetchRemindersForUser, acknowledgeReminder, acknowledgeAllReminders } from "@/services/reminder.service";
 
 interface Notification {
   id: string;
@@ -57,20 +58,11 @@ export default function InboxScreen() {
 
     try {
       // 1. Fetch user map for resolving sender details in-memory
-      const { data: usersData } = await supabase
-        .from("master_user")
-        .select("id, full_name");
-
-      const userMap = new Map((usersData || []).map((u: any) => [String(u.id), u.full_name]));
+      const usersData = await fetchUsers();
+      const userMap = new Map((usersData || []).map((u) => [String(u.id), u.full_name]));
 
       // 2. Fetch notifications for current user
-      const { data: reminderData, error } = await supabase
-        .from("t_ping_reminder")
-        .select("*")
-        .eq("receiver_id", parseInt(user.id, 10))
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
+      const reminderData = await fetchRemindersForUser(user.id);
 
       if (reminderData) {
         const mapped = reminderData.map((row: any) => {
@@ -141,12 +133,7 @@ export default function InboxScreen() {
           text: "Ya, Konfirmasi",
           onPress: async () => {
             try {
-              const { error } = await supabase
-                .from("t_ping_reminder")
-                .update({ is_acknowledged: true })
-                .eq("id", parseInt(notif.id, 10));
-
-              if (error) throw error;
+              await acknowledgeReminder(notif.id);
 
               setModalVisible(false);
               fetchNotifications();
@@ -164,13 +151,7 @@ export default function InboxScreen() {
   const handleMarkAllAsRead = async () => {
     if (!user?.id) return;
     try {
-      const { error } = await supabase
-        .from("t_ping_reminder")
-        .update({ is_acknowledged: true })
-        .eq("receiver_id", parseInt(user.id, 10))
-        .eq("is_acknowledged", false);
-
-      if (error) throw error;
+      await acknowledgeAllReminders(user.id);
 
       fetchNotifications();
       Alert.alert("Sukses", "Semua laporan berhasil dikonfirmasi.");

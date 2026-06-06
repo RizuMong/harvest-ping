@@ -11,8 +11,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { supabase } from "@/services/supabase";
+import { fetchUsers } from "@/services/user.service";
+import { fetchReminders, DBNotification as ServiceNotification } from "@/services/reminder.service";
 
+// We can map ServiceNotification or rename locally to fit the component's interface
 interface DBNotification {
   id: string;
   title: string;
@@ -45,32 +47,11 @@ export default function NotificationHistoryScreen() {
     }
 
     try {
-      // 1. Fetch user mapping
-      const { data: usersData, error: usersError } = await supabase
-        .from("master_user")
-        .select("id, full_name, nrp");
+      // 1. Fetch user mapping using service
+      const usersData = await fetchUsers();
 
-      if (usersError) {
-        console.error("Error fetching users:", usersError);
-      }
-
-      // 2. Fetch reminders with explicit working columns
-      const { data: remindersData, error: remindersError } = await supabase
-        .from("t_ping_reminder")
-        .select("id, title, message, priority, is_acknowledged, created_at, receiver_id")
-        .order("created_at", { ascending: false });
-
-      if (remindersError) {
-        console.error("Error fetching reminders raw data:", remindersError);
-        throw remindersError;
-      }
-
-      // Console logging for verification
-      console.log("remindersData returned:", remindersData);
-      if (Array.isArray(remindersData) && remindersData.length > 0) {
-        console.log("First reminder record keys:", Object.keys(remindersData[0]));
-        console.log("First reminder record:", remindersData[0]);
-      }
+      // 2. Fetch reminders raw data using service
+      const remindersData = await fetchReminders();
 
       if (Array.isArray(remindersData)) {
         // Map user data in-memory
@@ -87,11 +68,11 @@ export default function NotificationHistoryScreen() {
             title: row.title || "-",
             message: row.message || "-",
             priority: row.priority || "Normal",
-            is_acknowledged: !!row.is_acknowledged,
-            created_at: row.created_at || null,
+            is_acknowledged: !!row.isAcknowledged,
+            created_at: row.createdAt || null,
             updated_at: confirmationTime,
-            receiver_id: row.receiver_id ? Number(row.receiver_id) : 0,
-            master_user: userMap.get(String(row.receiver_id)) || undefined,
+            receiver_id: row.receiverId ? Number(row.receiverId) : 0,
+            master_user: userMap.get(String(row.receiverId)) || undefined,
           };
         }).filter(Boolean) as DBNotification[];
         setReminders(mapped);

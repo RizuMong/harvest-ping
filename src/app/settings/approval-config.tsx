@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useHarvestStore } from "@/store/harvest.store";
-import { supabase } from "@/services/supabase";
+import { fetchUsers } from "@/services/user.service";
 
 interface DBUser {
   id: string;
@@ -35,26 +35,18 @@ export default function ApprovalConfigScreen() {
 
   // Fetch users from master_user to add
   useEffect(() => {
-    const fetchUsers = async () => {
+    const loadUsers = async () => {
       setUsersLoading(true);
       try {
-        const { data, error } = await supabase
-          .from("master_user")
-          .select("id, full_name, nrp");
-        if (!error && data) {
-          setDbUsers(data.map((u: any) => ({
-            id: String(u.id),
-            full_name: u.full_name,
-            nrp: u.nrp,
-          })));
-        }
+        const data = await fetchUsers();
+        setDbUsers(data);
       } catch (err) {
-        console.error("fetchUsers error:", err);
+        console.error("loadUsers error:", err);
       } finally {
         setUsersLoading(false);
       }
     };
-    fetchUsers();
+    loadUsers();
   }, []);
 
   // Filter users not already added

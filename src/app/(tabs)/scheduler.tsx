@@ -1,7 +1,8 @@
 import { PRIORITY_BADGE_STYLES } from "@/config/app.config";
-import { supabase } from "@/services/supabase";
 import { useAuthStore } from "@/store/auth.store";
 import { Ionicons } from "@expo/vector-icons";
+import { fetchUsers } from "@/services/user.service";
+import { fetchSchedules, createSchedules, deleteSchedules, ScheduleRow } from "@/services/scheduler.service";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -19,18 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface ScheduleRow {
-  id: string;
-  receiver_id: string | null;
-  title: string | null;
-  message: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  ping_time: string | null;
-  priority: string | null;
-  status: string | null;
-  created_at: string | null;
-}
+// ScheduleRow and formatting helpers now imported from scheduler.service.ts
 
 interface DBUser {
   id: string;
@@ -132,24 +122,7 @@ export default function SchedulerScreen() {
     }
   };
 
-  const formatDateOnly = (dateStr: string | null) => {
-    if (!dateStr) return "-";
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      const day = String(d.getDate()).padStart(2, "0");
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const year = d.getFullYear();
-      return `${year}-${month}-${day}`;
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const formatTimeOnly = (timeStr: string | null) => {
-    if (!timeStr) return "-";
-    return timeStr.slice(0, 5);
-  };
+// Formatting helpers now imported from scheduler.service.ts
 
   const translateError = (msg: string | null | undefined) => {
     if (!msg) return "Terjadi kesalahan yang tidak diketahui.";
@@ -203,62 +176,29 @@ export default function SchedulerScreen() {
   };
 
   useEffect(() => {
-    fetchSchedules();
-    fetchUsers();
+    loadSchedules();
+    loadUsers();
   }, []);
 
-  const fetchSchedules = async () => {
+  const loadSchedules = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("t_ping_scheduller")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("fetchSchedules error:", error);
-        Alert.alert("Error", "Gagal memuat jadwal.");
-      } else if (data) {
-        setSchedules(
-          data.map((row: any) => ({
-            id: String(row.id),
-            receiver_id: row.receiver_id ? String(row.receiver_id) : null,
-            title: row.title,
-            message: row.message,
-            start_date: formatDateOnly(row.start_date),
-            end_date: formatDateOnly(row.end_date),
-            ping_time: formatTimeOnly(row.ping_time),
-            priority: row.priority,
-            status: row.status,
-            created_at: row.created_at,
-          }))
-        );
-      }
-    } catch (err) {
-      console.error("fetchSchedules catch:", err);
-      Alert.alert("Error", "Terjadi kesalahan saat memuat jadwal.");
+      const data = await fetchSchedules();
+      setSchedules(data);
+    } catch (err: any) {
+      console.error("fetchSchedules error:", err);
+      Alert.alert("Error", err.message || "Gagal memuat jadwal.");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchUsers = async () => {
+  const loadUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from("master_user")
-        .select("id, full_name, nrp");
-
-      if (!error && data) {
-        setUsers(
-          data.map((row: any) => ({
-            id: String(row.id),
-            full_name: row.full_name,
-            nrp: row.nrp,
-          }))
-        );
-      }
+      const data = await fetchUsers();
+      setUsers(data);
     } catch (err) {
-      console.error("fetchUsers catch:", err);
+      console.error("loadUsers catch:", err);
     }
   };
 
@@ -340,16 +280,11 @@ export default function SchedulerScreen() {
     }));
 
     try {
-      const { error } = await supabase.from("t_ping_scheduller").insert(rows);
-      if (error) {
-        console.error("save schedule error:", error);
-        showToast(`Gagal menyimpan jadwal: ${translateError(error.message)}`);
-      } else {
-        setModalVisible(false);
-        Alert.alert("Sukses", "Jadwal berhasil ditambahkan.");
-        resetForm();
-        fetchSchedules();
-      }
+      await createSchedules(rows);
+      setModalVisible(false);
+      Alert.alert("Sukses", "Jadwal berhasil ditambahkan.");
+      resetForm();
+      loadSchedules();
     } catch (err: any) {
       console.error("save schedule catch:", err);
       showToast(`Terjadi kesalahan: ${translateError(err.message || err)}`);
@@ -361,20 +296,11 @@ export default function SchedulerScreen() {
   const performDelete = async () => {
     setDeleteLoading(true);
     try {
-      const { error } = await supabase
-        .from("t_ping_scheduller")
-        .delete()
-        .in("id", selectedScheduleIds.map((id) => parseInt(id, 10)));
-
-      if (error) {
-        console.error("delete schedule error:", error);
-        showToast(`Gagal menghapus: ${translateError(error.message)}`);
-      } else {
-        setDeleteModalVisible(false);
-        Alert.alert("Sukses", "Jadwal berhasil dihapus.");
-        setSelectedScheduleIds([]);
-        fetchSchedules();
-      }
+      await deleteSchedules(selectedScheduleIds);
+      setDeleteModalVisible(false);
+      Alert.alert("Sukses", "Jadwal berhasil dihapus.");
+      setSelectedScheduleIds([]);
+      loadSchedules();
     } catch (err: any) {
       console.error("delete schedule catch:", err);
       showToast(`Terjadi kesalahan: ${translateError(err.message || err)}`);

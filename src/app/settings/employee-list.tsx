@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { supabase } from "@/services/supabase";
+import { fetchUsers } from "@/services/user.service";
 
 interface Employee {
   id: string;
@@ -26,7 +26,7 @@ export default function EmployeeListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchEmployees = async (isRefresh = false) => {
+  const loadEmployees = async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
     } else {
@@ -34,22 +34,8 @@ export default function EmployeeListScreen() {
     }
 
     try {
-      const { data, error } = await supabase
-        .from("master_user")
-        .select("id, full_name, nrp")
-        .order("full_name", { ascending: true });
-
-      if (error) throw error;
-
-      if (data) {
-        setEmployees(
-          data.map((u: any) => ({
-            id: String(u.id),
-            full_name: u.full_name,
-            nrp: u.nrp,
-          }))
-        );
-      }
+      const data = await fetchUsers();
+      setEmployees(data);
     } catch (err) {
       console.error("Error fetching employees:", err);
     } finally {
@@ -59,7 +45,7 @@ export default function EmployeeListScreen() {
   };
 
   useEffect(() => {
-    fetchEmployees();
+    loadEmployees();
   }, []);
 
   // Filter employees based on search query
@@ -148,7 +134,7 @@ export default function EmployeeListScreen() {
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
-                onRefresh={() => fetchEmployees(true)}
+                onRefresh={() => loadEmployees(true)}
                 colors={["#2E7D32"]}
                 tintColor="#2E7D32"
               />

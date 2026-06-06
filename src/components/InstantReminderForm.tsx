@@ -1,6 +1,7 @@
-import { supabase } from "@/services/supabase";
 import { useAuthStore } from "@/store/auth.store";
 import { Ionicons } from "@expo/vector-icons";
+import { fetchUsers } from "@/services/user.service";
+import { createReminders } from "@/services/reminder.service";
 import { useEffect, useMemo, useState } from "react";
 import {
     Alert,
@@ -55,27 +56,16 @@ export default function InstantReminderForm({
   const [userSearch, setUserSearch] = useState("");
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const loadUsers = async () => {
       try {
-        const { data, error } = await supabase
-          .from("master_user")
-          .select("id, full_name, nrp");
-
-        if (!error && data) {
-          setUsers(
-            data.map((row: any) => ({
-              id: String(row.id),
-              full_name: row.full_name,
-              nrp: row.nrp,
-            }))
-          );
-        }
+        const data = await fetchUsers();
+        setUsers(data);
       } catch (err) {
-        console.error("fetchUsers error:", err);
+        console.error("loadUsers error:", err);
       }
     };
 
-    fetchUsers();
+    loadUsers();
   }, []);
 
   const userMap = useMemo(
@@ -143,13 +133,7 @@ export default function InstantReminderForm({
     }));
 
     try {
-      const { error } = await supabase.from("t_ping_reminder").insert(rows);
-      if (error) {
-        console.error("save reminder error:", error);
-        Alert.alert("Gagal", "Tidak dapat menyimpan pengingat. Silakan coba lagi.");
-        return;
-      }
-
+      await createReminders(rows);
       resetForm();
       Alert.alert("Sukses", "Pengingat instant berhasil dibuat!", [
         {
@@ -161,7 +145,7 @@ export default function InstantReminderForm({
       ]);
     } catch (err: any) {
       console.error("save reminder catch:", err);
-      Alert.alert("Gagal", "Terjadi kesalahan saat menyimpan pengingat.");
+      Alert.alert("Gagal", err.message || "Terjadi kesalahan saat menyimpan pengingat.");
     } finally {
       setLoading(false);
     }
