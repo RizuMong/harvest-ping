@@ -45,11 +45,35 @@ export const registerDevice = async (userId: string | number) => {
     // 4. Parse user_id
     const parsedUserId = typeof userId === "string" ? parseInt(userId, 10) : userId;
 
-    // 5. Perform UPSERT based on (user_id, device_id)
-    const { data, error } = await supabase
+    // 5. Perform manual select then insert/update to avoid ON CONFLICT constraint error
+    const { data: existing } = await supabase
       .from("user_devices")
-      .upsert(
-        {
+      .select("device_id")
+      .eq("device_id", deviceId)
+      .maybeSingle();
+
+    let data;
+    if (existing) {
+      const { data: updateData, error: updateError } = await supabase
+        .from("user_devices")
+        .update({
+          user_id: parsedUserId,
+          device_name: deviceName,
+          platform: platform,
+          push_token: pushToken,
+          last_active_at: now,
+          updated_at: now,
+        })
+        .eq("device_id", deviceId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+      data = updateData;
+    } else {
+      const { data: insertData, error: insertError } = await supabase
+        .from("user_devices")
+        .insert({
           user_id: parsedUserId,
           device_id: deviceId,
           device_name: deviceName,
@@ -57,17 +81,12 @@ export const registerDevice = async (userId: string | number) => {
           push_token: pushToken,
           last_active_at: now,
           updated_at: now,
-        },
-        {
-          onConflict: "user_id,device_id",
-        }
-      )
-      .select()
-      .single();
+        })
+        .select()
+        .single();
 
-    if (error) {
-      console.error("Error registering user device in database:", error);
-      throw error;
+      if (insertError) throw insertError;
+      data = insertData;
     }
 
     console.log("Device registered successfully in Supabase:", data);
