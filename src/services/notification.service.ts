@@ -74,6 +74,7 @@ export const registerDevice = async (userId: string | number) => {
       const { data: insertData, error: insertError } = await supabase
         .from("user_devices")
         .insert({
+          id: Date.now(),
           user_id: parsedUserId,
           device_id: deviceId,
           device_name: deviceName,
