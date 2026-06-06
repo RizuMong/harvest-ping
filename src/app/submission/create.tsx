@@ -42,6 +42,43 @@ export default function CreateSubmissionScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [currentViewMonth, setCurrentViewMonth] = useState(new Date().getMonth() + 1);
+  const [currentViewYear, setCurrentViewYear] = useState(new Date().getFullYear());
+
+  const getDaysInMonth = (month: number, year: number) => {
+    return new Date(year, month, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (month: number, year: number) => {
+    return new Date(year, month - 1, 1).getDay();
+  };
+
+  const handlePrevMonth = () => {
+    if (currentViewMonth === 1) {
+      setCurrentViewMonth(12);
+      setCurrentViewYear((y) => y - 1);
+    } else {
+      setCurrentViewMonth((m) => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (currentViewMonth === 12) {
+      setCurrentViewMonth(1);
+      setCurrentViewYear((y) => y + 1);
+    } else {
+      setCurrentViewMonth((m) => m + 1);
+    }
+  };
+
+  // Handle Custom Date Picker confirmation
+  const handleConfirmDate = () => {
+    const formattedDay = String(selectedDay).padStart(2, "0");
+    const formattedMonth = String(selectedMonth).padStart(2, "0");
+    const dateStr = `${selectedYear}-${formattedMonth}-${formattedDay}`;
+    setHarvestDate(dateStr);
+    setDateModalVisible(false);
+  };
 
   // Segment Tab State: "create" or "history"
   const [activeSegment, setActiveSegment] = useState<"create" | "history">("create");
@@ -61,15 +98,6 @@ export default function CreateSubmissionScreen() {
   const filteredSchedulers = schedulers.filter((s) =>
     s.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // Handle Custom Date Picker confirmation
-  const handleConfirmDate = () => {
-    const formattedDay = String(selectedDay).padStart(2, "0");
-    const formattedMonth = String(selectedMonth).padStart(2, "0");
-    const dateStr = `${selectedYear}-${formattedMonth}-${formattedDay}`;
-    setHarvestDate(dateStr);
-    setDateModalVisible(false);
-  };
 
   // Submit Handler
   const handleSubmit = async () => {
@@ -189,7 +217,29 @@ export default function CreateSubmissionScreen() {
               <Text style={styles.inputLabel}>Tanggal Panen <Text style={{ color: "#D93025" }}>*</Text></Text>
               <Pressable
                 style={styles.dropdownTrigger}
-                onPress={() => setDateModalVisible(true)}
+                onPress={() => {
+                  if (harvestDate) {
+                    const parts = harvestDate.split("-");
+                    if (parts.length === 3) {
+                      const y = parseInt(parts[0], 10);
+                      const m = parseInt(parts[1], 10);
+                      const d = parseInt(parts[2], 10);
+                      setSelectedDay(d);
+                      setSelectedMonth(m);
+                      setSelectedYear(y);
+                      setCurrentViewMonth(m);
+                      setCurrentViewYear(y);
+                    }
+                  } else {
+                    const now = new Date();
+                    setSelectedDay(now.getDate());
+                    setSelectedMonth(now.getMonth() + 1);
+                    setSelectedYear(now.getFullYear());
+                    setCurrentViewMonth(now.getMonth() + 1);
+                    setCurrentViewYear(now.getFullYear());
+                  }
+                  setDateModalVisible(true);
+                }}
               >
                 <Text
                   style={[
@@ -361,53 +411,68 @@ export default function CreateSubmissionScreen() {
                 </Pressable>
               </View>
 
-              <View style={styles.datePickersRow}>
-                {/* Day Input */}
-                <View style={styles.dateCol}>
-                  <Text style={styles.dateColLabel}>Hari</Text>
-                  <TextInput
-                    style={styles.dateInput}
-                    keyboardType="numeric"
-                    maxLength={2}
-                    value={String(selectedDay)}
-                    onChangeText={(text) => {
-                      const val = parseInt(text, 10);
-                      if (!isNaN(val) && val >= 1 && val <= 31) setSelectedDay(val);
-                      else if (text === "") setSelectedDay(1);
-                    }}
-                  />
+              <View style={styles.calendarContainer}>
+                <View style={styles.calendarHeader}>
+                  <Pressable onPress={handlePrevMonth} style={styles.calendarNavBtn}>
+                    <Ionicons name="chevron-back" size={20} color="#2E7D32" />
+                  </Pressable>
+                  <Text style={styles.calendarMonthText}>
+                    {new Date(currentViewYear, currentViewMonth - 1).toLocaleDateString("id-ID", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </Text>
+                  <Pressable onPress={handleNextMonth} style={styles.calendarNavBtn}>
+                    <Ionicons name="chevron-forward" size={20} color="#2E7D32" />
+                  </Pressable>
                 </View>
 
-                {/* Month Input */}
-                <View style={styles.dateCol}>
-                  <Text style={styles.dateColLabel}>Bulan (1-12)</Text>
-                  <TextInput
-                    style={styles.dateInput}
-                    keyboardType="numeric"
-                    maxLength={2}
-                    value={String(selectedMonth)}
-                    onChangeText={(text) => {
-                      const val = parseInt(text, 10);
-                      if (!isNaN(val) && val >= 1 && val <= 12) setSelectedMonth(val);
-                      else if (text === "") setSelectedMonth(1);
-                    }}
-                  />
+                <View style={styles.weekDaysRow}>
+                  {["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].map((name) => (
+                    <Text key={name} style={styles.weekDayText}>
+                      {name}
+                    </Text>
+                  ))}
                 </View>
 
-                {/* Year Input */}
-                <View style={styles.dateCol}>
-                  <Text style={styles.dateColLabel}>Tahun</Text>
-                  <TextInput
-                    style={styles.dateInput}
-                    keyboardType="numeric"
-                    maxLength={4}
-                    value={String(selectedYear)}
-                    onChangeText={(text) => {
-                      const val = parseInt(text, 10);
-                      if (!isNaN(val)) setSelectedYear(val);
-                      else if (text === "") setSelectedYear(new Date().getFullYear());
-                    }}
-                  />
+                <View style={styles.calendarGrid}>
+                  {(() => {
+                    const daysInMonth = getDaysInMonth(currentViewMonth, currentViewYear);
+                    const firstDayIndex = getFirstDayOfMonth(currentViewMonth, currentViewYear);
+                    const cells = [];
+
+                    for (let i = 0; i < firstDayIndex; i++) {
+                      cells.push({ id: `pad-${i}`, val: null });
+                    }
+                    for (let i = 1; i <= daysInMonth; i++) {
+                      cells.push({ id: `day-${i}`, val: i });
+                    }
+
+                    return cells.map((cell) => {
+                      if (cell.val === null) {
+                        return <View key={cell.id} style={styles.calendarCellEmpty} />;
+                      }
+                      const isSelected =
+                        selectedDay === cell.val &&
+                        selectedMonth === currentViewMonth &&
+                        selectedYear === currentViewYear;
+                      return (
+                        <Pressable
+                          key={cell.id}
+                          style={[styles.calendarCell, isSelected && styles.calendarCellSelected]}
+                          onPress={() => {
+                            setSelectedDay(cell.val);
+                            setSelectedMonth(currentViewMonth);
+                            setSelectedYear(currentViewYear);
+                          }}
+                        >
+                          <Text style={[styles.calendarCellText, isSelected && styles.calendarCellTextSelected]}>
+                            {cell.val}
+                          </Text>
+                        </Pressable>
+                      );
+                    });
+                  })()}
                 </View>
               </View>
 
@@ -704,32 +769,65 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 340,
   },
-  datePickersRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
+  calendarContainer: {
     marginBottom: 20,
   },
-  dateCol: {
-    flex: 1,
-    flexDirection: "column",
+  calendarHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
   },
-  dateColLabel: {
+  calendarNavBtn: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#E8F5E9",
+  },
+  calendarMonthText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#202124",
+  },
+  weekDaysRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  weekDayText: {
+    flex: 1,
+    textAlign: "center",
     fontSize: 12,
     fontWeight: "600",
-    color: "#5F6368",
-    marginBottom: 6,
-    textAlign: "center",
+    color: "#6B7280",
   },
-  dateInput: {
-    borderWidth: 1,
-    borderColor: "#DADCE0",
+  calendarGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-start",
+    gap: 4,
+  },
+  calendarCell: {
+    width: "13.2%",
+    aspectRatio: 1,
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 8,
-    height: 44,
-    fontSize: 16,
-    color: "#202124",
-    textAlign: "center",
     backgroundColor: "#F9FAFB",
+  },
+  calendarCellSelected: {
+    backgroundColor: "#2E7D32",
+  },
+  calendarCellEmpty: {
+    width: "13.2%",
+    aspectRatio: 1,
+  },
+  calendarCellText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#202124",
+  },
+  calendarCellTextSelected: {
+    color: "#FFFFFF",
     fontWeight: "700",
   },
   dateConfirmBtn: {
