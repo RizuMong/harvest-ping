@@ -134,16 +134,12 @@ export default function InstantReminderForm({
       return;
     }
 
-    const creatorId = user?.id ? parseInt(user.id, 10) : 1;
     const rows = selectedReceiverIds.map((receiver_id) => ({
       receiver_id: parseInt(receiver_id, 10),
       title: title.trim(),
       message: message.trim(),
       priority,
       is_acknowledged: false,
-      created_by: creatorId,
-      updated_by: creatorId,
-      created_at: new Date().toISOString(),
     }));
 
     try {
