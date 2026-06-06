@@ -9,10 +9,6 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Firebase
-harvest-ping-notifications-firebase
-google-services.json
-
 # Native
 .kotlin/
 *.orig.*

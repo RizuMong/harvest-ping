@@ -20,13 +20,15 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.rizkihaddiprayoga.HarvestPing"
+      "package": "com.rizkihaddiprayoga.HarvestPing",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-notifications",
       "expo-router",
       [
         "expo-splash-screen",
@@ -51,6 +53,7 @@
       "eas": {
         "projectId": "5d7ed732-d4bf-4008-84f7-3d3c0b5c0638"
       }
-    }
+    },
+    "owner": "rizkihaddiprayoga"
   }
 }

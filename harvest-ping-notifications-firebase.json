@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "harvest-ping-notifications",
+  "private_key_id": "d42fa5f862981695f6ddf99815ecbfa87118edb1",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDKem39S3hnWyXI\nIRjoRAZmn7J6xP64D5aQUv5n/qELCaZb4cMcbyg2AeDpir1/QZxyIabIstqvSXIf\ne74IrI7hkjMz3bNYZ8xjXpbxQ7p3S3PsIVCK+ZTixBoh4nU6kkxUgz8lYShr6OB0\neAMvpk5Mpewu9bD5Mv0GVZEO4GISKov/TvLrlfgW+x7v1CTKv7Q0K0W2LiK8meNH\nku40WPVv2lRbg+Wwue/lTZSCLt3Z9eKedCO3ruqelocQHaE+r8OECGDxqD/toi8r\nLLhbdCwUUGM+ifBPD+hFjhXaKpNX1rA20g/XAuaEAqfMbQERqkrn5b75GhFS91Y5\n09w5mq0dAgMBAAECggEABhtAIvH6PR++GXWKE0Mt8D1jvBkh13o837hpDMjcoYEW\nf9HkuQBPNaXD2zdAdMyNQ9Ho/keKmdu8sd9hAVD29C2dFrTaelGTE/If2kHhJ0Ti\nx53PmIljaJ1ibmAuiegsniXhKybteaep0UlnSzIYTW55m4b0YeecQuskt06kFokd\nLoeF7hMoyrEDStYHqfkGxSUrCVoQ8tjtQSshVy+ec9M4bfP+j3FHXHqXPgUGuSP+\nvG+KPll0nuOY9hR5EUNQsmC/JqkGNVeNU00joWJPr9KM4lg07XgGJ8JKNTdHTqX8\n84fFfqbOQZajiliCfITsGgPYlAg1Bh3Mq0ZVg84I0QKBgQD2G3Ud+HlbR3bvLfDl\n3AS2mtKgQ5VMppE/V0CrgnqA230qyoz7qPvEgCkuDhhmJ0K88zWnGUk6LKgfZWS3\n1jGDPktL5A/J0pDcxGBNQTN51iHl2YHRJwzR1rjHRUpY7Oo6+wPwS2DMHPjv0dxt\naDeJu6O479riYdCrK8azESWMCQKBgQDSngMW/j00XtuNGPMMKNxwyVeWKVbOU3F5\nozS6diokm2aFDQ5rsJhwdi43GVKp7lD8S6+Z1xod+dYTAFhE8xjGoFiy88xJgLVn\niFlpam8veSXqJFLipZb8TDF3UL/Hq7YLvFOoM3Rk05dE9yA9Ag2VFCxyM+MmnFZL\nlnADYmmFdQKBgQCnl7kgiLVzoG3woLNchIC9LR9jvcIs6X0dyjgi037CwzUwb7Ck\nK8YPYUsprrWU0wWSkHin6wM/12tBvhVhTz52ZnR2IL9Tq820WRJPaag5PsXktUK/\nAD2to/A+2wOvHN7A/XEIMPyg4tXu0lWuN3sikyIB7Wx8HyovdmcgR/vuqQKBgB4N\n/lLhpMo8Xwgbb1Nk4VAW6zC6ZXC75418BKI3Cnx+0HpcCprDcH1b3+xs6KbnIxdd\nlYlWcJumcy3y9qWgKwDtELs4nwY+H6TOiDPKxGL53rcyx8Ef8BPAq65jD3rmveue\nzDFMZmec6hElUqxiBp4natBBJ0DzPj07EnDpMjWhAoGBANBf7Bi0YqE7lHaSj9RR\nBlIGJfsvOhuuUdbGKwCLpvw4lD/W+c+TAeMRBKMCUTGVkw2udfpBijL30YoPhRFe\nFsKN3LTdtveZfP+xB9rHXuaD/hgH8BT8QrtmElkfUqkLOFQMrv8QNtrFBgE5Yuw8\nx4KrUJvJqG/Tpwvrpq14v6xr\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@harvest-ping-notifications.iam.gserviceaccount.com",
+  "client_id": "101212453868549173280",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40harvest-ping-notifications.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
