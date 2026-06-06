@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Alert,
     Modal,
@@ -8,34 +8,112 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    View
+    View,
+    ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PRIORITY_BADGE_STYLES } from "@/config/app.config";
-import { Notification, useNotificationStore } from "@/store/notification.store";
+import { supabase } from "@/services/supabase";
+import { useAuthStore } from "@/store/auth.store";
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  date: string;
+  time?: string;
+  sender: string;
+  senderInitials: string;
+  read: boolean;
+  is_acknowledged: boolean;
+  priority: string;
+  scheduleType?: "Panen" | "Perawatan";
+  receiverIds?: string[];
+  receiverNames?: string[];
+}
 
 export default function InboxScreen() {
-  const notifications = useNotificationStore((state) => state.notifications);
-  const acknowledgeNotification = useNotificationStore((state) => state.acknowledgeNotification);
-  const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
+  const user = useAuthStore((state) => state.user);
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // UI Navigation Tabs: "unconfirmed" or "confirmed"
   const [activeTab, setActiveTab] = useState<"unconfirmed" | "confirmed">("unconfirmed");
-  
-  // Refresh Control
-  const [refreshing, setRefreshing] = useState(false);
   
   // Detail Modal States
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Handle pull-to-refresh
-  const onRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => {
+  const fetchNotifications = async (isRefresh = false) => {
+    if (!user?.id) return;
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      // 1. Fetch user map for resolving sender details in-memory
+      const { data: usersData } = await supabase
+        .from("master_user")
+        .select("id, full_name");
+
+      const userMap = new Map((usersData || []).map((u: any) => [String(u.id), u.full_name]));
+
+      // 2. Fetch notifications for current user
+      const { data: reminderData, error } = await supabase
+        .from("t_ping_reminder")
+        .select("*")
+        .eq("receiver_id", parseInt(user.id, 10))
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      if (reminderData) {
+        const mapped = reminderData.map((row: any) => {
+          const senderName = userMap.get(String(row.created_by)) || "System";
+          const initials = senderName
+            .split(" ")
+            .map((n) => n[0])
+            .slice(0, 2)
+            .join("")
+            .toUpperCase();
+
+          const createdDate = new Date(row.created_at);
+
+          return {
+            id: String(row.id),
+            title: row.title || "-",
+            message: row.message || "-",
+            date: createdDate.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
+            time: createdDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+            sender: senderName,
+            senderInitials: initials,
+            read: !!row.is_acknowledged,
+            is_acknowledged: !!row.is_acknowledged,
+            priority: row.priority || "Normal",
+          };
+        });
+        setNotifications(mapped);
+      }
+    } catch (err) {
+      console.error("fetchNotifications error:", err);
+      Alert.alert("Error", "Gagal memuat kotak masuk.");
+    } finally {
+      setLoading(false);
       setRefreshing(false);
-    }, 1200);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [user?.id]);
+
+  const onRefresh = () => {
+    fetchNotifications(true);
   };
 
   // Filter notifications based on acknowledgment state
@@ -50,7 +128,7 @@ export default function InboxScreen() {
     setModalVisible(true);
   };
 
-  const handleConfirmReport = (notif: Notification) => {
+  const handleConfirmReport = async (notif: Notification) => {
     Alert.alert(
       "Konfirmasi Penerimaan",
       "Apakah Anda yakin laporan ini sudah diterima dan dipahami?",
@@ -61,22 +139,50 @@ export default function InboxScreen() {
         },
         {
           text: "Ya, Konfirmasi",
-          onPress: () => {
-            acknowledgeNotification(notif.id);
-            setModalVisible(false);
-            
-            // Show success toast/alert
-            Alert.alert("Sukses", "Laporan berhasil dikonfirmasi.");
+          onPress: async () => {
+            try {
+              const { error } = await supabase
+                .from("t_ping_reminder")
+                .update({ is_acknowledged: true })
+                .eq("id", parseInt(notif.id, 10));
+
+              if (error) throw error;
+
+              setModalVisible(false);
+              fetchNotifications();
+              Alert.alert("Sukses", "Laporan berhasil dikonfirmasi.");
+            } catch (err) {
+              console.error("Acknowledge notification error:", err);
+              Alert.alert("Error", "Gagal mengonfirmasi laporan.");
+            }
           },
         },
       ]
     );
   };
 
+  const handleMarkAllAsRead = async () => {
+    if (!user?.id) return;
+    try {
+      const { error } = await supabase
+        .from("t_ping_reminder")
+        .update({ is_acknowledged: true })
+        .eq("receiver_id", parseInt(user.id, 10))
+        .eq("is_acknowledged", false);
+
+      if (error) throw error;
+
+      fetchNotifications();
+      Alert.alert("Sukses", "Semua laporan berhasil dikonfirmasi.");
+    } catch (err) {
+      console.error("Mark all as read error:", err);
+      Alert.alert("Error", "Gagal mengonfirmasi semua laporan.");
+    }
+  };
+
   const getPriorityStyle = (priority: string) =>
     PRIORITY_BADGE_STYLES[priority as keyof typeof PRIORITY_BADGE_STYLES] ||
     PRIORITY_BADGE_STYLES.Rendah;
-
 
   const activeNotifications =
     activeTab === "unconfirmed" ? unconfirmedNotifications : confirmedNotifications;
@@ -92,7 +198,7 @@ export default function InboxScreen() {
         
         {unacknowledgedCount > 0 && (
           <Pressable
-            onPress={markAllAsRead}
+            onPress={handleMarkAllAsRead}
             style={({ pressed }) => [
               styles.markAllBtn,
               pressed && styles.btnPressed,
@@ -138,7 +244,11 @@ export default function InboxScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#2E7D32"]} />
         }
       >
-        {activeNotifications.length === 0 ? (
+        {loading ? (
+          <View style={{ paddingVertical: 40, alignItems: "center" }}>
+            <ActivityIndicator size="large" color="#2E7D32" />
+          </View>
+        ) : activeNotifications.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconBg}>
               <Ionicons

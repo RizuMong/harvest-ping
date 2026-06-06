@@ -21,7 +21,9 @@ export type HomeQuickActionRoute =
     | "/(tabs)/inbox"
     | "/(tabs)/request"
     | "/(tabs)/scheduler"
-    | "/approval";
+    | "/approval"
+    | "/settings/employee-list"
+    | "/reminder/history";
 
 export interface HomeQuickAction {
     id: string;
@@ -86,7 +88,7 @@ export const PRIORITY_BADGE_STYLES = {
     },
 } as const;
 
-export const DEFAULT_SCHEDULERS = [];
+export const DEFAULT_SCHEDULERS: { id: string; title: string }[] = [];
 
 export const DEFAULT_APPROVERS = [
     { id: "1", userName: "Rizki Haddi", sequence: 1 },
@@ -174,5 +176,21 @@ export const HOME_QUICK_ACTIONS: HomeQuickAction[] = [
         bgColor: "#F3E5F5",
         iconColor: "#6A1B9A",
         route: "/approval",
+    },
+    {
+        id: "employee-list",
+        label: "Daftar Karyawan",
+        icon: "people-outline",
+        bgColor: "#E0F2F1",
+        iconColor: "#00796B",
+        route: "/settings/employee-list",
+    },
+    {
+        id: "reminder-history",
+        label: "Riwayat Pengingat",
+        icon: "time-outline",
+        bgColor: "#E3F2FD",
+        iconColor: "#1E88E5",
+        route: "/reminder/history",
     },
 ];

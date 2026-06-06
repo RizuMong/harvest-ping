@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import { router } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Platform,
   Pressable,
@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -60,7 +61,9 @@ function HomeScreen() {
   // Calculate unread notifications count for badge
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const quickActions = HOME_QUICK_ACTIONS.map((item) => ({
+  const [allAppsVisible, setAllAppsVisible] = useState(false);
+
+  const rawActions = HOME_QUICK_ACTIONS.map((item) => ({
     ...item,
     badge:
       item.id === "inbox"
@@ -71,8 +74,21 @@ function HomeScreen() {
     onPress: () => router.push(item.route),
   }));
 
-  // Show top 3 notifications in the home page
-  const homeAnnouncements = notifications.slice(0, 3);
+  const limitExceeded = rawActions.length > 6;
+  const displayedActions = limitExceeded
+    ? [
+        ...rawActions.slice(0, 5),
+        {
+          id: "all-apps",
+          label: "Semua Fitur",
+          icon: "grid-outline",
+          bgColor: "#E8F5E9",
+          iconColor: "#2E7D32",
+          badge: undefined,
+          onPress: () => setAllAppsVisible(true),
+        },
+      ]
+    : rawActions;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -105,7 +121,7 @@ function HomeScreen() {
         {/* Quick Actions Card Grid */}
         <View style={styles.actionsCard}>
           <View style={styles.gridContainer}>
-            {quickActions.map((action) => (
+            {displayedActions.map((action) => (
               <Pressable
                 key={action.id}
                 style={({ pressed }) => [
@@ -129,46 +145,55 @@ function HomeScreen() {
             ))}
           </View>
         </View>
-
-        {/* Announcements/Notifications Card */}
-        <View style={styles.announcementsCard}>
-          <View style={styles.announcementsHeader}>
-            <Text style={styles.announcementsTitle}>Pengumuman</Text>
-            <Pressable onPress={() => router.push("/(tabs)/inbox")}>
-              <Text style={styles.viewAllText}>View all</Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.announcementsList}>
-            {homeAnnouncements.length === 0 ? (
-              <Text style={styles.emptyText}>Belum ada pengumuman masuk.</Text>
-            ) : (
-              homeAnnouncements.map((announcement, index) => (
-                <View
-                  key={announcement.id}
-                  style={[
-                    styles.announcementItem,
-                    index === homeAnnouncements.length - 1 && styles.lastAnnouncementItem,
-                  ]}
-                >
-                  <View style={styles.announcementHeaderRow}>
-                    <Text style={styles.announcementItemTitle} numberOfLines={2}>
-                      {announcement.title}
-                    </Text>
-                    <Text style={styles.announcementDate}>{announcement.date}</Text>
-                  </View>
-                  <View style={styles.announcementAuthorRow}>
-                    <View style={styles.authorAvatar}>
-                      <Text style={styles.authorAvatarText}>{announcement.senderInitials}</Text>
-                    </View>
-                    <Text style={styles.announcementAuthorName}>{announcement.sender}</Text>
-                  </View>
-                </View>
-              ))
-            )}
-          </View>
-        </View>
       </ScrollView>
+
+      {/* All Apps Modal */}
+      <Modal
+        visible={allAppsVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setAllAppsVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setAllAppsVisible(false)}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Semua Fitur</Text>
+              <Pressable onPress={() => setAllAppsVisible(false)} style={styles.closeBtn}>
+                <Ionicons name="close" size={24} color="#5F6368" />
+              </Pressable>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Pressable style={styles.modalGrid}>
+                {rawActions.map((action) => (
+                  <Pressable
+                    key={action.id}
+                    style={({ pressed }) => [
+                      styles.modalGridItem,
+                      pressed && styles.gridItemPressed,
+                    ]}
+                    onPress={() => {
+                      setAllAppsVisible(false);
+                      action.onPress();
+                    }}
+                  >
+                    <View style={[styles.iconContainer, { backgroundColor: action.bgColor }]}>
+                      <Ionicons name={action.icon as any} size={24} color={action.iconColor} />
+                      {action.badge && (
+                        <View style={styles.badgeContainer}>
+                          <Text style={styles.badgeText}>{action.badge}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.gridLabel} numberOfLines={2}>
+                      {action.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </Pressable>
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -304,85 +329,44 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 4,
   },
-  announcementsCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB", // Clear border instead of shadow
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
   },
-  announcementsHeader: {
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: "75%",
+  },
+  modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
-  },
-  announcementsTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#1F2937",
-  },
-  viewAllText: {
-    fontSize: 13,
-    color: "#2E7D32",
-    fontWeight: "600",
-  },
-  announcementsList: {
-    width: "100%",
-  },
-  announcementItem: {
-    paddingVertical: 14,
+    marginBottom: 20,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#F3F4F6",
   },
-  lastAnnouncementItem: {
-    borderBottomWidth: 0,
-    paddingBottom: 0,
-  },
-  announcementHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 8,
-  },
-  announcementItemTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1F2937",
-    flex: 1,
-    paddingRight: 16,
-    lineHeight: 20,
-  },
-  announcementDate: {
-    fontSize: 11,
-    color: "#6B7280",
-  },
-  announcementAuthorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  authorAvatar: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: "#E5E7EB",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 8,
-  },
-  authorAvatarText: {
-    fontSize: 9,
+  modalTitle: {
+    fontSize: 18,
     fontWeight: "700",
-    color: "#6B7280",
+    color: "#1F2937",
   },
-  announcementAuthorName: {
-    fontSize: 12,
-    color: "#6B7280",
+  closeBtn: {
+    padding: 4,
   },
-  emptyText: {
-    fontSize: 13,
-    color: "#9CA3AF",
-    textAlign: "center",
-    marginVertical: 16,
+  modalGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-start",
+    paddingBottom: 24,
+  },
+  modalGridItem: {
+    width: "33.33%",
+    alignItems: "center",
+    marginVertical: 14,
   },
 });
