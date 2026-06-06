@@ -12,6 +12,7 @@ expo-env.d.ts
 # Firebase
 harvest-ping-notifications-firebase.json
 google-services.json
+harvest-ping-notifications-firebase-adminsdk-fbsvc-2a3c6d98ba.json
 
 # Native
 .kotlin/

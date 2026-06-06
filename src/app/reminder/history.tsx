@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { fetchUsers } from "@/services/user.service";
-import { fetchReminders, DBNotification as ServiceNotification } from "@/services/reminder.service";
+import { fetchReminders } from "@/services/reminder.service";
 
 // We can map ServiceNotification or rename locally to fit the component's interface
 interface DBNotification {
