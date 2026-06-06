@@ -15,6 +15,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import { login } from "@/services/auth.service";
+import { registerDevice } from "@/services/notification.service";
 import { saveSession } from "@/services/storage.service";
 import { useAuthStore } from "@/store/auth.store";
 
@@ -43,6 +44,14 @@ export default function LoginScreen() {
     try {
       const user = await login(nrp.trim(), pin.trim());
       await saveSession(user);
+      
+      // Register device for push notifications
+      try {
+        await registerDevice(user.id);
+      } catch (deviceError) {
+        console.error("Device registration ignored on login:", deviceError);
+      }
+
       setUser(user);
       router.replace("/(tabs)/home");
     } catch (err: any) {
