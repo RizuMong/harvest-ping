@@ -10,7 +10,7 @@ web-build/
 expo-env.d.ts
 
 # Firebase
-harvest-ping-notifications-firebase
+harvest-ping-notifications-firebase.json
 google-services.json
 
 # Native
