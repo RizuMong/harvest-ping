@@ -136,44 +136,79 @@ export const useHarvestStore = create<HarvestState>()(
 
       createRequest: async (schedulerId, harvestDate, note, userId, userName) => {
         set({ loading: true });
-        const schedulerTitle = get().schedulers.find(s => String(s.id) === String(schedulerId))?.title || "Jadwal Panen";
         
-        // Generate approval lines based on current configuration
-        const sortedConfigs = [...get().approverConfigs].sort((a, b) => a.sequence - b.sequence);
-        const approvalLines: ApprovalLine[] = sortedConfigs.map((c) => ({
-          approverId: c.userId || c.id,
-          userId: c.userId || c.id,
-          approverName: c.userName,
-          status: "Waiting",
-        }));
-
-        const numericUserId = parseInt(userId, 10) || 1;
-
-        const newRequest: FinishHarvestRequest = {
-          id: String(Date.now()),
-          schedulerId,
-          schedulerTitle,
-          harvestDate,
-          note,
-          status: "submitted",
-          submissionDate: new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
-          userId,
-          userName,
-          approvalLines,
-          timeline: []
-        };
-
-        // Update local state first
-        set((state) => ({
-          requests: [newRequest, ...state.requests]
-        }));
-
-        // Attempt Supabase insert
         try {
+          const numericSchedulerId = parseInt(schedulerId, 10);
+          if (isNaN(numericSchedulerId)) {
+            throw new Error("ID Scheduler tidak valid.");
+          }
+
+          // 1. Backend Validation: Verify scheduler is active
+          const { data: schedulerData, error: schedulerError } = await supabase
+            .from("t_ping_scheduller")
+            .select("status")
+            .eq("id", numericSchedulerId)
+            .maybeSingle();
+
+          if (schedulerError || !schedulerData) {
+            throw new Error("Jadwal Panen (Scheduler) tidak ditemukan.");
+          }
+
+          if (schedulerData.status !== "active") {
+            throw new Error("Jadwal Panen (Scheduler) yang dipilih tidak berstatus Active.");
+          }
+
+          // 2. Backend Validation: Verify scheduler is not already used in an active request (submitted or approved)
+          const { data: existingRequests, error: existingError } = await supabase
+            .from("trx_finish_harvest")
+            .select("id")
+            .eq("scheduler_id", numericSchedulerId)
+            .in("status", ["submitted", "approved"]);
+
+          if (existingError) {
+            throw new Error("Gagal melakukan validasi duplikasi pengajuan.");
+          }
+
+          if (existingRequests && existingRequests.length > 0) {
+            throw new Error("Title scheduler sudah digunakan pada pengajuan lain.");
+          }
+
+          const schedulerTitle = get().schedulers.find(s => String(s.id) === String(schedulerId))?.title || "Jadwal Panen";
+          
+          // Generate approval lines based on current configuration
+          const sortedConfigs = [...get().approverConfigs].sort((a, b) => a.sequence - b.sequence);
+          const approvalLines: ApprovalLine[] = sortedConfigs.map((c) => ({
+            approverId: c.userId || c.id,
+            userId: c.userId || c.id,
+            approverName: c.userName,
+            status: "Waiting",
+          }));
+
+          const numericUserId = parseInt(userId, 10) || 1;
+
+          const newRequest: FinishHarvestRequest = {
+            id: String(Date.now()),
+            schedulerId,
+            schedulerTitle,
+            harvestDate,
+            note,
+            status: "submitted",
+            submissionDate: new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
+            userId,
+            userName,
+            approvalLines,
+            timeline: []
+          };
+
+          // Update local state
+          set((state) => ({
+            requests: [newRequest, ...state.requests]
+          }));
+
           const { error } = await supabase
             .from("trx_finish_harvest")
             .insert({
-              scheduler_id: parseInt(schedulerId, 10) || 1,
+              scheduler_id: numericSchedulerId,
               harvest_date: harvestDate,
               note: note,
               status: "submitted",
@@ -184,12 +219,14 @@ export const useHarvestStore = create<HarvestState>()(
 
           if (error) {
             console.error("Supabase insert request error:", error);
+            throw new Error(error.message || "Gagal menyimpan pengajuan ke database.");
           } else {
             // Re-fetch to ensure we have the exact database record and real ID
             await get().fetchRequests();
           }
-        } catch (err) {
-          console.error("Supabase createRequest catch:", err);
+        } catch (err: any) {
+          console.error("createRequest error:", err);
+          throw err;
         } finally {
           set({ loading: false });
         }

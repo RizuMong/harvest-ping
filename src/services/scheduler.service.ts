@@ -69,6 +69,24 @@ export const deleteSchedules = async (ids: string[]): Promise<void> => {
   const numericIds = ids.map((id) => parseInt(id, 10)).filter((n) => !isNaN(n));
   if (numericIds.length === 0) return;
 
+  const { data: currentSchedules, error: fetchError } = await supabase
+    .from("t_ping_scheduller")
+    .select("status")
+    .in("id", numericIds);
+
+  if (fetchError) {
+    console.error("Error fetching schedules for deletion validation:", fetchError);
+    throw new Error(fetchError.message || "Gagal memvalidasi status jadwal.");
+  }
+
+  const hasNonPending = currentSchedules?.some(
+    (s) => s.status !== "pending"
+  );
+
+  if (hasNonPending) {
+    throw new Error("Active or completed reminder schedules cannot be deleted.");
+  }
+
   const { error } = await supabase
     .from("t_ping_scheduller")
     .delete()

@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useHarvestStore } from "@/store/harvest.store";
 import { useAuthStore } from "@/store/auth.store";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { formatDateTime } from "@/shared/utils/date.format";
 
 export default function ApprovalDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -139,7 +140,7 @@ export default function ApprovalDetailScreen() {
 
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Tanggal Panen</Text>
-              <Text style={styles.detailValue}>{request.harvestDate}</Text>
+              <Text style={styles.detailValue}>{formatDateTime(request.harvestDate)}</Text>
             </View>
 
             <View style={styles.detailRow}>

@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -127,6 +126,9 @@ export default function SchedulerScreen() {
   const translateError = (msg: string | null | undefined) => {
     if (!msg) return "Terjadi kesalahan yang tidak diketahui.";
     const lower = msg.toLowerCase();
+    if (lower.includes("active or completed reminder schedules cannot be deleted")) {
+      return "Active or completed reminder schedules cannot be deleted.";
+    }
     if (lower.includes("violates foreign key constraint")) {
       return "Jadwal tidak dapat dihapus karena masih digunakan dalam riwayat atau pengajuan selesai panen.";
     }
@@ -273,7 +275,7 @@ export default function SchedulerScreen() {
       end_date: isoEndDate,
       ping_time: formattedPingTime,
       priority,
-      status: "active",
+      status: "pending",
       created_by: creatorId,
       created_at: new Date().toISOString(),
       updated_by: creatorId,
@@ -326,23 +328,26 @@ export default function SchedulerScreen() {
     const scheduleTypeValue = parseScheduleType(item.title);
     const titleValue = stripTypeFromTitle(item.title);
     const priorityStyle = PRIORITY_BADGE_STYLES[item.priority as keyof typeof PRIORITY_BADGE_STYLES] || PRIORITY_BADGE_STYLES.Normal;
+    const isDeletable = item.status === "pending";
 
     return (
       <Pressable
         key={item.id}
         style={[styles.scheduleItem, selected && styles.scheduleItemSelected]}
-        onPress={() => toggleScheduleSelection(item.id)}
+        onPress={() => isDeletable && toggleScheduleSelection(item.id)}
       >
         <View style={styles.scheduleRowTop}>
           <View>
             <Text style={styles.scheduleType}>{scheduleTypeValue}</Text>
             <Text style={styles.scheduleTitle}>{titleValue}</Text>
           </View>
-          <Ionicons
-            name={selected ? "checkbox" : "square-outline"}
-            size={22}
-            color={selected ? "#1F7A1F" : "#9CA3AF"}
-          />
+          {isDeletable && (
+            <Ionicons
+              name={selected ? "checkbox" : "square-outline"}
+              size={22}
+              color={selected ? "#1F7A1F" : "#9CA3AF"}
+            />
+          )}
         </View>
 
         <Text style={styles.scheduleMeta}>{item.message || "-"}</Text>
@@ -672,7 +677,7 @@ export default function SchedulerScreen() {
                 {(() => {
                   const daysInMonth = getDaysInMonth(currentViewMonth, currentViewYear);
                   const firstDayIndex = getFirstDayOfMonth(currentViewMonth, currentViewYear);
-                  const cells = [];
+                  const cells: { id: string; val: number | null }[] = [];
 
                   for (let i = 0; i < firstDayIndex; i++) {
                     cells.push({ id: `pad-${i}`, val: null });
@@ -681,30 +686,43 @@ export default function SchedulerScreen() {
                     cells.push({ id: `day-${i}`, val: i });
                   }
 
-                  return cells.map((cell) => {
-                    if (cell.val === null) {
-                      return <View key={cell.id} style={styles.calendarCellEmpty} />;
-                    }
-                    const isSelected =
-                      selectedDay === cell.val &&
-                      selectedMonth === currentViewMonth &&
-                      selectedYear === currentViewYear;
-                    return (
-                      <Pressable
-                        key={cell.id}
-                        style={[styles.calendarCell, isSelected && styles.calendarCellSelected]}
-                        onPress={() => {
-                          setSelectedDay(cell.val);
-                          setSelectedMonth(currentViewMonth);
-                          setSelectedYear(currentViewYear);
-                        }}
-                      >
-                        <Text style={[styles.calendarCellText, isSelected && styles.calendarCellTextSelected]}>
-                          {cell.val}
-                        </Text>
-                      </Pressable>
-                    );
-                  });
+                  const rows: { id: string; val: number | null }[][] = [];
+                  for (let i = 0; i < cells.length; i += 7) {
+                    rows.push(cells.slice(i, i + 7));
+                  }
+
+                  return rows.map((row, rowIndex) => (
+                    <View key={`row-${rowIndex}`} style={styles.calendarRow}>
+                      {row.map((cell) => {
+                        if (cell.val === null) {
+                          return <View key={cell.id} style={styles.calendarCellEmpty} />;
+                        }
+                        const dayVal = cell.val;
+                        const isSelected =
+                          selectedDay === dayVal &&
+                          selectedMonth === currentViewMonth &&
+                          selectedYear === currentViewYear;
+                        return (
+                          <Pressable
+                            key={cell.id}
+                            style={[styles.calendarCell, isSelected && styles.calendarCellSelected]}
+                            onPress={() => {
+                              setSelectedDay(dayVal);
+                              setSelectedMonth(currentViewMonth);
+                              setSelectedYear(currentViewYear);
+                            }}
+                          >
+                            <Text style={[styles.calendarCellText, isSelected && styles.calendarCellTextSelected]}>
+                              {dayVal}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                      {row.length < 7 && Array.from({ length: 7 - row.length }).map((_, idx) => (
+                        <View key={`pad-end-${idx}`} style={styles.calendarCellEmpty} />
+                      ))}
+                    </View>
+                  ));
                 })()}
               </View>
             </View>
@@ -1129,13 +1147,16 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   calendarGrid: {
+    width: "100%",
+  },
+  calendarRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "flex-start",
-    gap: 4,
+    justifyContent: "space-between",
+    marginBottom: 6,
   },
   calendarCell: {
-    width: "13.2%",
+    flex: 1,
+    marginHorizontal: 2,
     aspectRatio: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -1146,13 +1167,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#1F7A1F",
   },
   calendarCellEmpty: {
-    width: "13.2%",
+    flex: 1,
+    marginHorizontal: 2,
     aspectRatio: 1,
   },
   calendarCellText: {
     fontSize: 13,
     fontWeight: "600",
     color: "#1E293B",
+    textAlign: "center",
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
   calendarCellTextSelected: {
     color: "#FFFFFF",

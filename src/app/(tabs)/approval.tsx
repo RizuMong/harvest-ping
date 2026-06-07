@@ -4,6 +4,7 @@ import { useHarvestStore } from "@/store/harvest.store";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
+import { formatDateTime } from "@/shared/utils/date.format";
 import {
   ActivityIndicator,
   Pressable,
@@ -86,7 +87,7 @@ export default function ApprovalTabScreen() {
 
                 <View style={styles.metaCol}>
                   <Text style={styles.metaLabel}>Tanggal Panen</Text>
-                  <Text style={styles.metaValue}>{req.harvestDate}</Text>
+                  <Text style={styles.metaValue}>{formatDateTime(req.harvestDate)}</Text>
                 </View>
 
                 <View style={styles.actionArrow}>

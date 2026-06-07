@@ -3,6 +3,9 @@ import { useHarvestStore } from "@/store/harvest.store";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { formatDateTime } from "@/shared/utils/date.format";
+
 import {
   ActivityIndicator,
   Pressable,
@@ -74,119 +77,125 @@ export default function SubmissionDetailScreen() {
   ];
 
   return (
-    <View style={styles.container}>
-      {/* Header Bar */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.headerBackBtn}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Detail Pengajuan</Text>
-        <View style={{ width: 24 }} />
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Main Details Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.schedulerTitle}>{request.schedulerTitle}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}>
-              <Text style={[styles.statusBadgeText, { color: statusInfo.text }]}>
-                {statusInfo.label}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* Details Grid */}
-          <View style={styles.detailRow}>
-            <View style={styles.detailCol}>
-              <Text style={styles.detailLabel}>Tanggal Panen</Text>
-              <Text style={styles.detailValue}>{request.harvestDate}</Text>
-            </View>
-            <View style={styles.detailCol}>
-              <Text style={styles.detailLabel}>Tanggal Diajukan</Text>
-              <Text style={styles.detailValue}>{request.submissionDate}</Text>
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.detailLabel}>Catatan Panen (Note)</Text>
-            <Text style={styles.noteText}>{request.note}</Text>
-          </View>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <View style={styles.container}>
+        {/* Header Bar */}
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.headerBackBtn}>
+            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          </Pressable>
+          <Text style={styles.headerTitle}>Detail Pengajuan</Text>
+          <View style={{ width: 24 }} />
         </View>
 
-        {/* Approvals Section */}
-        <Text style={styles.sectionTitle}>Status Persetujuan</Text>
-        <View style={styles.card}>
-          {request.approvalLines.length === 0 ? (
-            <Text style={styles.emptyText}>Tidak ada alur persetujuan terkonfigurasi.</Text>
-          ) : (
-            request.approvalLines.map((line, index) => {
-              const lineMeta = APPROVAL_LINE_META[line.status] || APPROVAL_LINE_META.Waiting;
-              return (
-                <View
-                  key={line.userId || line.approverId || `line-${index}`}
-                  style={[
-                    styles.approverRow,
-                    index === request.approvalLines.length - 1 && styles.lastApproverRow,
-                  ]}
-                >
-                  <View style={styles.approverLeft}>
-                    <View style={[styles.lineIcon, { backgroundColor: lineMeta.iconBg }]}> 
-                      <Ionicons name={lineMeta.icon as any} size={20} color={lineMeta.iconColor} />
-                    </View>
-                    <View style={styles.approverInfo}>
-                      <Text style={styles.approverName}>{line.approverName}</Text>
-                      {line.actionDate && (
-                        <Text style={styles.actionDate}>Pada: {line.actionDate}</Text>
-                      )}
-                      {line.remarks && (
-                        <Text style={styles.remarksText}>Catatan: "{line.remarks}"</Text>
-                      )}
-                    </View>
-                  </View>
-                  <Text
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {/* Main Details Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.schedulerTitle}>{request.schedulerTitle}</Text>
+              <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}>
+                <Text style={[styles.statusBadgeText, { color: statusInfo.text }]}>
+                  {statusInfo.label}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            {/* Details Grid */}
+            <View style={styles.detailRow}>
+              <View style={styles.detailCol}>
+                <Text style={styles.detailLabel}>Tanggal Panen</Text>
+                <Text style={styles.detailValue}>{formatDateTime(request.harvestDate)}</Text>
+              </View>
+              <View style={styles.detailCol}>
+                <Text style={styles.detailLabel}>Tanggal Diajukan</Text>
+                <Text style={styles.detailValue}>{request.submissionDate}</Text>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.detailLabel}>Catatan Panen (Note)</Text>
+              <Text style={styles.noteText}>{request.note}</Text>
+            </View>
+          </View>
+
+          {/* Approvals Section */}
+          <Text style={styles.sectionTitle}>Status Persetujuan</Text>
+          <View style={styles.card}>
+            {request.approvalLines.length === 0 ? (
+              <Text style={styles.emptyText}>Tidak ada alur persetujuan terkonfigurasi.</Text>
+            ) : (
+              request.approvalLines.map((line, index) => {
+                const lineMeta = APPROVAL_LINE_META[line.status] || APPROVAL_LINE_META.Waiting;
+                return (
+                  <View
+                    key={line.userId || line.approverId || `line-${index}`}
                     style={[
-                      styles.lineStatusText,
-                      line.status === "Approved" ? { color: "#137333" } :
-                      line.status === "Rejected" ? { color: "#C5221F" } :
-                      { color: "#1A73E8" },
+                      styles.approverRow,
+                      index === request.approvalLines.length - 1 && styles.lastApproverRow,
                     ]}
                   >
-                    {line.status || "Waiting"}
-                  </Text>
-                </View>
-              );
-            })
-          )}
-        </View>
+                    <View style={styles.approverLeft}>
+                      <View style={[styles.lineIcon, { backgroundColor: lineMeta.iconBg }]}>
+                        <Ionicons name={lineMeta.icon as any} size={20} color={lineMeta.iconColor} />
+                      </View>
+                      <View style={styles.approverInfo}>
+                        <Text style={styles.approverName}>{line.approverName}</Text>
+                        {line.actionDate && (
+                          <Text style={styles.actionDate}>Pada: {line.actionDate}</Text>
+                        )}
+                        {line.remarks && (
+                          <Text style={styles.remarksText}>Catatan: "{line.remarks}"</Text>
+                        )}
+                      </View>
+                    </View>
+                    <Text
+                      style={[
+                        styles.lineStatusText,
+                        line.status === "Approved" ? { color: "#137333" } :
+                          line.status === "Rejected" ? { color: "#C5221F" } :
+                            { color: "#1A73E8" },
+                      ]}
+                    >
+                      {line.status || "Waiting"}
+                    </Text>
+                  </View>
+                );
+              })
+            )}
+          </View>
 
-        {/* Timeline Section */}
-        <Text style={styles.sectionTitle}>Aktivitas & Timeline</Text>
-        <View style={styles.card}>
-          {timelineEvents.map((event, index) => (
-            <View key={index} style={styles.timelineRow}>
-              <View style={styles.timelineLeft}>
-                <View style={[styles.timelineIconBg, { backgroundColor: event.iconBg }]}>
-                  <Ionicons name={event.icon as any} size={14} color={event.iconColor} />
+          {/* Timeline Section */}
+          <Text style={styles.sectionTitle}>Aktivitas & Timeline</Text>
+          <View style={styles.card}>
+            {timelineEvents.map((event, index) => (
+              <View key={index} style={styles.timelineRow}>
+                <View style={styles.timelineLeft}>
+                  <View style={[styles.timelineIconBg, { backgroundColor: event.iconBg }]}>
+                    <Ionicons name={event.icon as any} size={14} color={event.iconColor} />
+                  </View>
+                  {index < timelineEvents.length - 1 && <View style={styles.timelineConnector} />}
                 </View>
-                {index < timelineEvents.length - 1 && <View style={styles.timelineConnector} />}
+                <View style={styles.timelineContent}>
+                  <Text style={styles.timelineTitle}>{event.title}</Text>
+                  <Text style={styles.timelineSubtitle}>{event.subtitle}</Text>
+                  <Text style={styles.timelineDate}>{event.date}</Text>
+                </View>
               </View>
-              <View style={styles.timelineContent}>
-                <Text style={styles.timelineTitle}>{event.title}</Text>
-                <Text style={styles.timelineSubtitle}>{event.subtitle}</Text>
-                <Text style={styles.timelineDate}>{event.date}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-    </View>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F3F4F6",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F3F4F6",

@@ -1,4 +1,5 @@
 import { getPendingApprovals } from "@/shared/utils/approval.utils";
+import { formatDateTime } from "@/shared/utils/date.format";
 import { useAuthStore } from "@/store/auth.store";
 import { useHarvestStore } from "@/store/harvest.store";
 import { Ionicons } from "@expo/vector-icons";
@@ -90,7 +91,7 @@ export default function ApprovalListScreen() {
 
                 <View style={styles.metaCol}>
                   <Text style={styles.metaLabel}>Tanggal Panen</Text>
-                  <Text style={styles.metaValue}>{req.harvestDate}</Text>
+                  <Text style={styles.metaValue}>{formatDateTime(req.harvestDate)}</Text>
                 </View>
 
                 <View style={styles.actionArrow}>

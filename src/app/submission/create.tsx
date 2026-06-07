@@ -135,7 +135,8 @@ export default function CreateSubmissionScreen() {
       setActiveSegment("history");
     } catch (err: any) {
       console.error(err);
-      Alert.alert("Error", "Gagal mengirim pengajuan");
+      const errorMessage = err?.message || "Gagal mengirim pengajuan";
+      Alert.alert("Error", errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -274,10 +275,10 @@ export default function CreateSubmissionScreen() {
               style={({ pressed }) => [
                 styles.submitBtn,
                 pressed && styles.submitBtnPressed,
-                submitting && styles.submitBtnDisabled,
+                (submitting || !selectedSchedulerId || !harvestDate || !note.trim()) && styles.submitBtnDisabled,
               ]}
               onPress={handleSubmit}
-              disabled={submitting}
+              disabled={submitting || !selectedSchedulerId || !harvestDate || !note.trim()}
             >
               {submitting ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
@@ -441,7 +442,7 @@ export default function CreateSubmissionScreen() {
                   {(() => {
                     const daysInMonth = getDaysInMonth(currentViewMonth, currentViewYear);
                     const firstDayIndex = getFirstDayOfMonth(currentViewMonth, currentViewYear);
-                    const cells = [];
+                    const cells: { id: string; val: number | null }[] = [];
 
                     for (let i = 0; i < firstDayIndex; i++) {
                       cells.push({ id: `pad-${i}`, val: null });
@@ -450,30 +451,43 @@ export default function CreateSubmissionScreen() {
                       cells.push({ id: `day-${i}`, val: i });
                     }
 
-                    return cells.map((cell) => {
-                      if (cell.val === null) {
-                        return <View key={cell.id} style={styles.calendarCellEmpty} />;
-                      }
-                      const isSelected =
-                        selectedDay === cell.val &&
-                        selectedMonth === currentViewMonth &&
-                        selectedYear === currentViewYear;
-                      return (
-                        <Pressable
-                          key={cell.id}
-                          style={[styles.calendarCell, isSelected && styles.calendarCellSelected]}
-                          onPress={() => {
-                            setSelectedDay(cell.val);
-                            setSelectedMonth(currentViewMonth);
-                            setSelectedYear(currentViewYear);
-                          }}
-                        >
-                          <Text style={[styles.calendarCellText, isSelected && styles.calendarCellTextSelected]}>
-                            {cell.val}
-                          </Text>
-                        </Pressable>
-                      );
-                    });
+                    const rows: { id: string; val: number | null }[][] = [];
+                    for (let i = 0; i < cells.length; i += 7) {
+                      rows.push(cells.slice(i, i + 7));
+                    }
+
+                    return rows.map((row, rowIndex) => (
+                      <View key={`row-${rowIndex}`} style={styles.calendarRow}>
+                        {row.map((cell) => {
+                          if (cell.val === null) {
+                            return <View key={cell.id} style={styles.calendarCellEmpty} />;
+                          }
+                          const dayVal = cell.val;
+                          const isSelected =
+                            selectedDay === dayVal &&
+                            selectedMonth === currentViewMonth &&
+                            selectedYear === currentViewYear;
+                          return (
+                            <Pressable
+                              key={cell.id}
+                              style={[styles.calendarCell, isSelected && styles.calendarCellSelected]}
+                              onPress={() => {
+                                setSelectedDay(dayVal);
+                                setSelectedMonth(currentViewMonth);
+                                setSelectedYear(currentViewYear);
+                              }}
+                            >
+                              <Text style={[styles.calendarCellText, isSelected && styles.calendarCellTextSelected]}>
+                                {dayVal}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                        {row.length < 7 && Array.from({ length: 7 - row.length }).map((_, idx) => (
+                          <View key={`pad-end-${idx}`} style={styles.calendarCellEmpty} />
+                        ))}
+                      </View>
+                    ));
                   })()}
                 </View>
               </View>
@@ -803,13 +817,16 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   calendarGrid: {
+    width: "100%",
+  },
+  calendarRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "flex-start",
-    gap: 4,
+    justifyContent: "space-between",
+    marginBottom: 6,
   },
   calendarCell: {
-    width: "13.2%",
+    flex: 1,
+    marginHorizontal: 2,
     aspectRatio: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -820,13 +837,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#2E7D32",
   },
   calendarCellEmpty: {
-    width: "13.2%",
+    flex: 1,
+    marginHorizontal: 2,
     aspectRatio: 1,
   },
   calendarCellText: {
     fontSize: 13,
     fontWeight: "600",
     color: "#202124",
+    textAlign: "center",
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
   calendarCellTextSelected: {
     color: "#FFFFFF",
