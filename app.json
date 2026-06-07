@@ -28,18 +28,22 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-notifications",
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/sounds/pager.wav"
+          ]
+        }
+      ],
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 180,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
+          "backgroundColor": "#F8FAF5"
         }
       ],
       "expo-secure-store"
