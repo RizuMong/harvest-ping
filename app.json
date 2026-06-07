@@ -34,7 +34,8 @@
         {
           "sounds": [
             "./assets/sounds/pager.wav"
-          ]
+          ],
+          "defaultChannel": "pager"
         }
       ],
       [
