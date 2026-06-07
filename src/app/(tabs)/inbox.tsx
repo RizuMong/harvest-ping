@@ -1,15 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    Modal,
-    Pressable,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-    ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -43,7 +43,7 @@ export default function InboxScreen() {
 
   // UI Navigation Tabs: "unconfirmed" or "confirmed"
   const [activeTab, setActiveTab] = useState<"unconfirmed" | "confirmed">("unconfirmed");
-  
+
   // Detail Modal States
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -169,14 +169,14 @@ export default function InboxScreen() {
     activeTab === "unconfirmed" ? unconfirmedNotifications : confirmedNotifications;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
           <Ionicons name="mail" size={24} color="#2E7D32" style={{ marginRight: 8 }} />
           <Text style={styles.headerTitle}>Kotak Masuk</Text>
         </View>
-        
+
         {unacknowledgedCount > 0 && (
           <Pressable
             onPress={handleMarkAllAsRead}
@@ -351,7 +351,7 @@ export default function InboxScreen() {
                       Prioritas {selectedNotif.priority}
                     </Text>
                   </View>
-                  
+
                   <Text style={styles.modalTimeText}>
                     Dibuat: {selectedNotif.date} pada {selectedNotif.time || "12:00"}
                   </Text>
