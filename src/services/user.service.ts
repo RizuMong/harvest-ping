@@ -9,8 +9,8 @@ export interface User {
 
 export const fetchUsers = async (): Promise<User[]> => {
   const session = await getSession();
-  if (!session || Number(session.role_id) !== 1) {
-    throw new Error("Akses ditolak. Anda tidak memiliki izin untuk melakukan tindakan ini.");
+  if (!session) {
+    throw new Error("Sesi tidak ditemukan. Harap masuk kembali.");
   }
 
   const { data, error } = await supabase

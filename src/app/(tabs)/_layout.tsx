@@ -53,6 +53,7 @@ export default function TabLayout() {
         name="inbox"
         options={{
           title: "Notifikasi",
+          href: roleId === 2 ? undefined : null,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "notifications" : "notifications-outline"} size={22} color={color} />
           ),

@@ -39,6 +39,11 @@ export const fetchReminders = async (): Promise<ReminderItem[]> => {
 };
 
 export const fetchRemindersForUser = async (userId: string) => {
+  const session = await getSession();
+  if (!session || String(session.id) !== String(userId)) {
+    throw new Error("Akses ditolak. Tidak dapat mengambil notifikasi untuk user lain.");
+  }
+
   const receiverIdNumber = parseInt(userId, 10);
   if (isNaN(receiverIdNumber)) {
     throw new Error("Invalid User ID");

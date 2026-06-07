@@ -83,7 +83,8 @@ export default function AuthProvider({
           // PGS cannot access Mandor only screens
           const isMandorOnly =
             path.includes("(tabs)/request") ||
-            path.includes("submission/create");
+            path.includes("submission/create") ||
+            path.includes("(tabs)/inbox");
 
           if (isMandorOnly) {
             router.replace("/(tabs)/home");

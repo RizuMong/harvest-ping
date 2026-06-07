@@ -17,18 +17,32 @@ import { HOME_QUICK_ACTIONS } from "@/config/app.config";
 import { getPendingApprovals } from "@/shared/utils/approval.utils";
 import { useAuthStore } from "@/store/auth.store";
 import { useHarvestStore } from "@/store/harvest.store";
-import { useNotificationStore } from "@/store/notification.store";
+import { fetchRemindersForUser } from "@/services/reminder.service";
 
 function HomeScreen() {
   const user = useAuthStore((state) => state.user);
-  const notifications = useNotificationStore((state) => state.notifications);
   const requests = useHarvestStore((state) => state.requests);
   const fetchRequests = useHarvestStore((state) => state.fetchRequests);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Fetch requests on mount
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!user?.id) return;
+      try {
+        const reminderData = await fetchRemindersForUser(user.id);
+        const count = reminderData.filter((r: any) => !r.is_acknowledged).length;
+        setUnreadCount(count);
+      } catch (err) {
+        console.error("fetchUnreadCount error:", err);
+      }
+    };
+    fetchUnreadCount();
+  }, [user?.id]);
 
   const currentUserId = user?.id || "";
   const pendingApprovals = getPendingApprovals(requests, currentUserId);
@@ -58,9 +72,6 @@ function HomeScreen() {
 
   const displayName = user?.name || "";
 
-  // Calculate unread notifications count for badge
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
   const [allAppsVisible, setAllAppsVisible] = useState(false);
 
   const rawActions = HOME_QUICK_ACTIONS.filter((item) => {
@@ -69,7 +80,6 @@ function HomeScreen() {
       return [
         "instant-reminder",
         "reminder-scheduler",
-        "inbox",
         "approval",
         "employee-list",
         "reminder-history"
