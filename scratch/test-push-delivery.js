@@ -14,10 +14,10 @@ async function sendPushAndCheckReceipt() {
   
   const payload = {
     to: pushToken,
-    sound: 'default',
+    sound: 'pager.wav',
     title: 'Harvest Ping Test',
     body: 'If you see this, push notification is working!',
-    channelId: 'default',
+    channelId: 'pager',
     data: { test: true },
   };
 

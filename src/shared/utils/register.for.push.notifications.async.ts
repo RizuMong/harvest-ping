@@ -11,6 +11,14 @@ export async function registerForPushNotificationsAsync() {
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#FF231F7C",
     });
+
+    await Notifications.setNotificationChannelAsync("pager", {
+      name: "Pager Notifications",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
+      sound: "pager.wav",
+    });
   }
 
   if (Device.isDevice) {

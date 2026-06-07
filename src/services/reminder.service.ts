@@ -135,6 +135,7 @@ async function sendPushNotificationsForReminders(rows: CreateReminderInput[]): P
         title: row.title,
         body: row.message,
         sound: "pager.wav",
+        channelId: "pager",
       };
 
       console.log(`Sending push notification to user ${receiverId} with payload:`, JSON.stringify(payload));
