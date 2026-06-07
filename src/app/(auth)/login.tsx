@@ -42,7 +42,17 @@ export default function LoginScreen() {
     setErrorMsg(null);
 
     try {
-      const user = await login(nrp.trim(), pin.trim());
+      const rawUser = await login(nrp.trim(), pin.trim());
+
+      // Map Supabase row fields to the User shape used by the auth store
+      const user = {
+        id: String(rawUser.id),
+        nrp: rawUser.nrp || nrp.trim(),
+        name: rawUser.full_name || rawUser.name || nrp.trim(),
+        role: rawUser.role || (rawUser.role_id === 1 ? "admin" : "user"),
+        blok: rawUser.blok || undefined,
+      };
+
       await saveSession(user);
       
       // Register device for push notifications

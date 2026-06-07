@@ -26,34 +26,37 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: "Beranda",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="request"
         options={{
-          title: "Request",
+          title: "Pengajuan",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "add-circle" : "add-circle-outline"} size={24} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="inbox"
         options={{
-          title: "Inbox",
+          title: "Notifikasi",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "mail" : "mail-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "notifications" : "notifications-outline"} size={22} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Account",
+          title: "Akun",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "person" : "person-outline"} size={22} color={color} />
           ),

@@ -21,7 +21,13 @@ export default function AuthProvider({
         const session = await getSession();
 
         if (session) {
-          setUser(session);
+          // Normalise stale sessions that stored full_name instead of name
+          const normalised = {
+            ...session,
+            name: session.name || session.full_name || session.nrp || "",
+            id: String(session.id),
+          };
+          setUser(normalised);
           setTimeout(() => {
             router.replace("/(tabs)/home");
           }, 100);

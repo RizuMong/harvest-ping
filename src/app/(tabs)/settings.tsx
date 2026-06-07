@@ -37,8 +37,8 @@ export default function SettingsScreen() {
   const [aboutExpanded, setAboutExpanded] = useState(true); // Default open to show explanation right there
 
   // Dynamic user data
-  const displayName = user?.name || "Rizki Haddi Prayoga";
-  const displayNrp = user?.nrp || "12345678"; // Sourced from logged-in user master_user data
+  const displayName = user?.name || "";
+  const displayNrp = user?.nrp || "";
 
   // Get user initials for avatar
   const getInitials = (name: string) => {

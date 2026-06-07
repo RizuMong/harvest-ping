@@ -56,7 +56,7 @@ function HomeScreen() {
       .toUpperCase();
   };
 
-  const displayName = user?.name || "Rizki Haddi Prayoga";
+  const displayName = user?.name || "";
 
   // Calculate unread notifications count for badge
   const unreadCount = notifications.filter((n) => !n.read).length;
