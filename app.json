@@ -49,7 +49,10 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "0227dc6d-0334-4574-9a47-a1b2bee460c7"
+      }
     },
     "owner": "rizki.mekari",
     "runtimeVersion": {
