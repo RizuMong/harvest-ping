@@ -282,7 +282,7 @@ export const useHarvestStore = create<HarvestState>()(
           if (allApproved) {
             const { error: schedError } = await supabase
               .from("t_ping_scheduller")
-              .update({ status: "completed" })
+              .update({ status: "done" })
               .eq("id", parseInt(request.schedulerId, 10));
             if (schedError) {
               console.error("Failed to stop scheduler:", schedError);
