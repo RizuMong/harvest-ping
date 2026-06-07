@@ -63,7 +63,25 @@ function HomeScreen() {
 
   const [allAppsVisible, setAllAppsVisible] = useState(false);
 
-  const rawActions = HOME_QUICK_ACTIONS.map((item) => ({
+  const rawActions = HOME_QUICK_ACTIONS.filter((item) => {
+    if (!user) return false;
+    if (user.role_id === 1) {
+      return [
+        "instant-reminder",
+        "reminder-scheduler",
+        "inbox",
+        "approval",
+        "employee-list",
+        "reminder-history"
+      ].includes(item.id);
+    } else if (user.role_id === 2) {
+      return [
+        "inbox",
+        "selesai-panen"
+      ].includes(item.id);
+    }
+    return false;
+  }).map((item) => ({
     ...item,
     badge:
       item.id === "inbox"

@@ -1,9 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuthStore } from "@/store/auth.store";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const user = useAuthStore((state) => state.user);
+  const roleId = user?.role_id;
 
   return (
     <Tabs
@@ -39,6 +42,7 @@ export default function TabLayout() {
         name="request"
         options={{
           title: "Pengajuan",
+          href: roleId === 2 ? undefined : null,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "add-circle" : "add-circle-outline"} size={24} color={color} />
           ),

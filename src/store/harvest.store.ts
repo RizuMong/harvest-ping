@@ -5,6 +5,7 @@ import {
   RequestStatus,
 } from "@/config/app.config";
 import { supabase } from "@/services/supabase";
+import { getSession } from "@/services/storage.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -233,6 +234,11 @@ export const useHarvestStore = create<HarvestState>()(
       },
 
       approveRequest: async (requestId, approverId) => {
+        const session = await getSession();
+        if (!session || Number(session.role_id) !== 1) {
+          throw new Error("Akses ditolak. Hanya PGS yang dapat menyetujui pengajuan.");
+        }
+
         set({ loading: true });
         const request = get().requests.find(r => r.id === requestId);
         if (!request) return;
@@ -290,6 +296,11 @@ export const useHarvestStore = create<HarvestState>()(
       },
 
       rejectRequest: async (requestId, approverId, remarks) => {
+        const session = await getSession();
+        if (!session || Number(session.role_id) !== 1) {
+          throw new Error("Akses ditolak. Hanya PGS yang dapat menolak pengajuan.");
+        }
+
         set({ loading: true });
         const request = get().requests.find(r => r.id === requestId);
         if (!request) return;
@@ -333,6 +344,11 @@ export const useHarvestStore = create<HarvestState>()(
       },
 
       addApproverConfig: async (userId, userName) => {
+        const session = await getSession();
+        if (!session || Number(session.role_id) !== 1) {
+          throw new Error("Akses ditolak. Hanya PGS yang dapat merubah konfigurasi.");
+        }
+
         const currentConfigs = get().approverConfigs;
         // Avoid duplicate configs
         if (currentConfigs.some(c => c.userId === userId)) return;
@@ -350,6 +366,11 @@ export const useHarvestStore = create<HarvestState>()(
       },
 
       removeApproverConfig: async (id) => {
+        const session = await getSession();
+        if (!session || Number(session.role_id) !== 1) {
+          throw new Error("Akses ditolak. Hanya PGS yang dapat merubah konfigurasi.");
+        }
+
         set((state) => {
           const filtered = state.approverConfigs.filter(c => c.id !== id);
           // Re-index sequences
@@ -362,6 +383,11 @@ export const useHarvestStore = create<HarvestState>()(
       },
 
       reorderApproverConfig: async (configs) => {
+        const session = await getSession();
+        if (!session || Number(session.role_id) !== 1) {
+          throw new Error("Akses ditolak. Hanya PGS yang dapat merubah konfigurasi.");
+        }
+
         set({ approverConfigs: configs });
       },
     }),

@@ -145,7 +145,7 @@ export default function SettingsScreen() {
         <Text style={styles.sectionHeader}>Settings</Text>
         <View style={styles.card}>
           {/* Approval Configuration (Admin Only) */}
-          {(user?.role?.toLowerCase() === "admin" || user?.nrp === "001") && (
+          {user?.role_id === 1 && (
             <Pressable
               style={({ pressed }) => [
                 styles.itemRow,

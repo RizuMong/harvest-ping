@@ -5,6 +5,7 @@ interface User {
   nrp: string;
   name: string;
   role: string;
+  role_id: number;
   blok?: string;
 }
 

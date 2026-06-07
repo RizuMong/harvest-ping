@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { getSession } from "./storage.service";
 
 export interface ScheduleRow {
   id: string;
@@ -33,6 +34,11 @@ export const formatTimeOnly = (timeStr: string | null) => {
 };
 
 export const fetchSchedules = async (): Promise<ScheduleRow[]> => {
+  const session = await getSession();
+  if (!session || Number(session.role_id) !== 1) {
+    throw new Error("Akses ditolak. Anda tidak memiliki izin untuk melakukan tindakan ini.");
+  }
+
   const { data, error } = await supabase
     .from("t_ping_scheduller")
     .select("*")
@@ -58,6 +64,11 @@ export const fetchSchedules = async (): Promise<ScheduleRow[]> => {
 };
 
 export const createSchedules = async (rows: any[]): Promise<void> => {
+  const session = await getSession();
+  if (!session || Number(session.role_id) !== 1) {
+    throw new Error("Akses ditolak. Anda tidak memiliki izin untuk melakukan tindakan ini.");
+  }
+
   const { error } = await supabase.from("t_ping_scheduller").insert(rows);
   if (error) {
     console.error("createSchedules error:", error);
@@ -66,6 +77,11 @@ export const createSchedules = async (rows: any[]): Promise<void> => {
 };
 
 export const deleteSchedules = async (ids: string[]): Promise<void> => {
+  const session = await getSession();
+  if (!session || Number(session.role_id) !== 1) {
+    throw new Error("Akses ditolak. Anda tidak memiliki izin untuk melakukan tindakan ini.");
+  }
+
   const numericIds = ids.map((id) => parseInt(id, 10)).filter((n) => !isNaN(n));
   if (numericIds.length === 0) return;
 

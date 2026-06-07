@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { getSession } from "./storage.service";
 
 export interface ReminderItem {
   id: string;
@@ -11,6 +12,11 @@ export interface ReminderItem {
 }
 
 export const fetchReminders = async (): Promise<ReminderItem[]> => {
+  const session = await getSession();
+  if (!session || Number(session.role_id) !== 1) {
+    throw new Error("Akses ditolak. Anda tidak memiliki izin untuk melakukan tindakan ini.");
+  }
+
   const { data, error } = await supabase
     .from("t_ping_reminder")
     .select("id, title, message, priority, is_acknowledged, created_at, receiver_id")
@@ -160,6 +166,11 @@ async function sendPushNotificationsForReminders(rows: CreateReminderInput[]): P
 }
 
 export const createReminders = async (rows: CreateReminderInput[]): Promise<void> => {
+  const session = await getSession();
+  if (!session || Number(session.role_id) !== 1) {
+    throw new Error("Akses ditolak. Anda tidak memiliki izin untuk melakukan tindakan ini.");
+  }
+
   const { error } = await supabase.from("t_ping_reminder").insert(rows);
   if (error) {
     console.error("createReminders error:", error);

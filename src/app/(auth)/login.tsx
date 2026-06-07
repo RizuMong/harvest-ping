@@ -50,6 +50,7 @@ export default function LoginScreen() {
         nrp: rawUser.nrp || nrp.trim(),
         name: rawUser.full_name || rawUser.name || nrp.trim(),
         role: rawUser.role || (rawUser.role_id === 1 ? "admin" : "user"),
+        role_id: Number(rawUser.role_id),
         blok: rawUser.blok || undefined,
       };
 
