@@ -49,17 +49,11 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "5d7ed732-d4bf-4008-84f7-3d3c0b5c0638"
-      }
+      "router": {}
     },
     "owner": "rizkihaddiprayoga",
     "runtimeVersion": {
       "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/5d7ed732-d4bf-4008-84f7-3d3c0b5c0638"
     }
   }
 }
