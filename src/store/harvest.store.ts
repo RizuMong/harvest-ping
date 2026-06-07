@@ -46,6 +46,7 @@ export interface FinishHarvestRequest {
 export interface Scheduler {
   id: string;
   title: string;
+  status?: string;
 }
 
 interface HarvestState {
@@ -80,10 +81,10 @@ export const useHarvestStore = create<HarvestState>()(
         try {
           const { data, error } = await supabase
             .from("t_ping_scheduller")
-            .select("id, title");
+            .select("id, title, status");
 
           if (!error && data && data.length > 0) {
-            set({ schedulers: data.map(s => ({ id: String(s.id), title: s.title })) });
+            set({ schedulers: data.map(s => ({ id: String(s.id), title: s.title, status: s.status ?? undefined })) });
           } else {
             // Seed DB table t_ping_scheduller if it exists but empty
             if (!error) {

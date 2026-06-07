@@ -95,8 +95,10 @@ export default function CreateSubmissionScreen() {
     setDropdownVisible(false);
   };
 
-  const filteredSchedulers = schedulers.filter((s) =>
-    s.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredSchedulers = schedulers.filter(
+    (s) =>
+      s.status === "active" &&
+      s.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Submit Handler

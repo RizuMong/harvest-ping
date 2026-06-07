@@ -88,7 +88,7 @@ export const PRIORITY_BADGE_STYLES = {
     },
 } as const;
 
-export const DEFAULT_SCHEDULERS: { id: string; title: string }[] = [];
+export const DEFAULT_SCHEDULERS: { id: string; title: string, status: string }[] = [];
 
 export const DEFAULT_APPROVERS = [
     { id: "1", userId: "1", userName: "Rizki Haddi", sequence: 1 },
