@@ -61,7 +61,7 @@ export default function SubmissionDetailScreen() {
     ...request.approvalLines
       .filter((l) => l.status !== "Waiting")
       .map((l) => {
-        const lineMeta = APPROVAL_LINE_META[l.status];
+        const lineMeta = APPROVAL_LINE_META[l.status] || APPROVAL_LINE_META.Waiting;
         return {
           title: l.status === "Approved" ? "Disetujui" : "Ditolak",
           subtitle: `Oleh ${l.approverName}${l.remarks ? ` - "${l.remarks}"` : ""}`,
@@ -123,7 +123,7 @@ export default function SubmissionDetailScreen() {
             <Text style={styles.emptyText}>Tidak ada alur persetujuan terkonfigurasi.</Text>
           ) : (
             request.approvalLines.map((line, index) => {
-              const lineMeta = APPROVAL_LINE_META[line.status];
+              const lineMeta = APPROVAL_LINE_META[line.status] || APPROVAL_LINE_META.Waiting;
               return (
                 <View
                   key={line.userId || line.approverId || `line-${index}`}
@@ -149,12 +149,12 @@ export default function SubmissionDetailScreen() {
                   <Text
                     style={[
                       styles.lineStatusText,
-                      line.status === "Approved" && { color: "#137333" },
-                      line.status === "Rejected" && { color: "#C5221F" },
-                      line.status === "Waiting" && { color: "#1A73E8" },
+                      line.status === "Approved" ? { color: "#137333" } :
+                      line.status === "Rejected" ? { color: "#C5221F" } :
+                      { color: "#1A73E8" },
                     ]}
                   >
-                    {line.status}
+                    {line.status || "Waiting"}
                   </Text>
                 </View>
               );
