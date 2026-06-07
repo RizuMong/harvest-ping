@@ -17,7 +17,8 @@ export interface ApproverConfig {
 }
 
 export interface ApprovalLine {
-  approverId: string;
+  approverId?: string;
+  userId?: string;
   approverName: string;
   status: ApprovalLineStatus;
   actionDate?: string;
@@ -139,7 +140,8 @@ export const useHarvestStore = create<HarvestState>()(
         // Generate approval lines based on current configuration
         const sortedConfigs = [...get().approverConfigs].sort((a, b) => a.sequence - b.sequence);
         const approvalLines: ApprovalLine[] = sortedConfigs.map((c) => ({
-          approverId: c.userId,
+          approverId: c.userId || c.id,
+          userId: c.userId || c.id,
           approverName: c.userName,
           status: "Waiting",
         }));
@@ -198,7 +200,8 @@ export const useHarvestStore = create<HarvestState>()(
         if (!request) return;
 
         const updatedLines = request.approvalLines.map(line => {
-          if (line.approverId === approverId) {
+          const lineUserId = line.userId || line.approverId;
+          if (lineUserId && String(lineUserId) === String(approverId)) {
             return {
               ...line,
               status: "Approved" as const,
@@ -254,7 +257,8 @@ export const useHarvestStore = create<HarvestState>()(
         if (!request) return;
 
         const updatedLines = request.approvalLines.map(line => {
-          if (line.approverId === approverId) {
+          const lineUserId = line.userId || line.approverId;
+          if (lineUserId && String(lineUserId) === String(approverId)) {
             return {
               ...line,
               status: "Rejected" as const,

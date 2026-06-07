@@ -126,7 +126,7 @@ export default function SubmissionDetailScreen() {
               const lineMeta = APPROVAL_LINE_META[line.status];
               return (
                 <View
-                  key={line.approverId}
+                  key={line.userId || line.approverId || `line-${index}`}
                   style={[
                     styles.approverRow,
                     index === request.approvalLines.length - 1 && styles.lastApproverRow,

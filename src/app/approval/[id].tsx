@@ -155,7 +155,7 @@ export default function ApprovalDetailScreen() {
         <Text style={styles.sectionTitle}>Alur Urutan Persetujuan</Text>
         <View style={styles.card}>
           {request.approvalLines.map((line, index) => (
-            <View key={line.approverId} style={styles.flowRow}>
+            <View key={line.userId || line.approverId || `line-${index}`} style={styles.flowRow}>
               <View style={styles.flowLeft}>
                 <View
                   style={[

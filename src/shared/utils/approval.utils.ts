@@ -5,7 +5,10 @@ export function getPendingApprovals(requests: FinishHarvestRequest[], currentUse
     if (req.status !== "submitted") return false;
 
     const currentIndex = req.approvalLines.findIndex(
-      (line) => String(line.approverId) === String(currentUserId)
+      (line) => {
+        const lineUserId = line.userId || line.approverId;
+        return lineUserId && String(lineUserId) === String(currentUserId);
+      }
     );
     if (currentIndex === -1) return false;
     if (req.approvalLines[currentIndex].status !== "Waiting") return false;
