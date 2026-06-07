@@ -37,16 +37,7 @@ export default function ReminderScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        <View style={styles.headerCard}>
-          <View>
-            <Text style={styles.headerTitle}>Pengingat Instant</Text>
-            <Text style={styles.headerSubtitle}>
-              Kelola pengingat yang sudah dibuat dan kirimkan ke tim secara instan.
-            </Text>
-          </View>
-        </View>
-
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}> 
         <View style={styles.listCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Daftar Pengingat</Text>
