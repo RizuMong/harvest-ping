@@ -2,6 +2,7 @@ import { Slot } from "expo-router";
 import AuthProvider from "@/providers/AuthProvider";
 import { NotificationProvider } from "@/providers/NotificationContext";
 import Constants from "expo-constants";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Initialize notification task handler only when running in development build or native app
 if (Constants.appOwnership !== "expo") {
@@ -48,10 +49,12 @@ if (Constants.appOwnership !== "expo") {
 
 export default function RootLayout() {
   return (
-    <NotificationProvider>
-      <AuthProvider>
-        <Slot />
-      </AuthProvider>
-    </NotificationProvider>
+    <SafeAreaProvider>
+      <NotificationProvider>
+        <AuthProvider>
+          <Slot />
+        </AuthProvider>
+      </NotificationProvider>
+    </SafeAreaProvider>
   );
 }
